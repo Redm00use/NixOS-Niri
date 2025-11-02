@@ -22,7 +22,7 @@
       imagemagick
       ueberzug
       unstable.pokemon-colorscripts
-      gowall
+      unstable.gowall
       qimgv
       krita
     ];

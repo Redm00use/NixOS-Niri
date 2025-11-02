@@ -5,8 +5,9 @@
 let
   sddm-astronaut = pkgs.sddm-astronaut.override {
     embeddedTheme = "japanese_aesthetic";
-    # themeConfig = {
-    # };
+    themeConfig = {
+      Font = "Monaspace Radon";
+    };
   };
 in
 {

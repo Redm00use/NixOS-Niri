@@ -32,10 +32,10 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
-    niri-blurry = {
-      url = "github:visualglitch91/niri/feat/blur";
-      flake = false;
-    };
+    # niri-blurry = {
+    #   url = "github:visualglitch91/niri/feat/blur";
+    #   flake = false;
+    # };
 
     noctalia = {
       url = "github:noctalia-dev/noctalia-shell";
