@@ -6,13 +6,13 @@
 
 
 ## Previews
-![Preview1](./assets/previews/Screenshot%20from%202025-10-19%2019-48-47.png)
-![Preview2](./assets/previews/Screenshot%20from%202025-10-19%2019-49-36.png)
-![Preview3](./assets/previews/Screenshot%20from%202025-10-19%2020-01-28.png)
+![Preview1](./assets/previews/Screenshot%20from%202025-11-01%2021-38-27.png)
+![Preview2](./assets/previews/Screenshot%20from%202025-11-01%2021-38-16.png)
+![Preview3](./assets/previews/Screenshot%20from%202025-11-01%2021-38-55.png)
 
 <details>
   <summary>SDDM</summary>
-  <img src="./assets/previews/Screenshot from 2025-10-19 19-52-56.png"/>
+  <img src="./assets/previews/Screenshot from 2025-11-01 21-39-19.png"/>
 </details>
 
 ## Packages
