@@ -6,7 +6,7 @@ stdenv.mkDerivation {
   pname = "cursor-mouse";
   version = "1.0";
 
-  src = ./src/Megumin;
+  src = ./src/Ellen-Joe;
 
   installPhase = ''
     mkdir -p $out/share/icons
