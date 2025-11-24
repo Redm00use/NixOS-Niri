@@ -17,13 +17,5 @@
         TimeoutStopSec = 10;
       };
     };
-    gnome-keyring = {
-      description = "GNOME Keyring Daemon";
-      wantedBy = [ "default.target" ];
-      serviceConfig = {
-        ExecStart = "${pkgs.gnome-keyring}/bin/gnome-keyring-daemon --start --components=pkcs11,secrets,ssh,gpg";
-        Restart = "on-failure";
-      };
-    };
   };
 }

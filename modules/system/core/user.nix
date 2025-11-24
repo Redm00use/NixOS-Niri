@@ -16,7 +16,9 @@
         "networkmanager"
         "wheel"
         "docker"
+        "kvm"
         "libvirtd"
+        "plugdev"
       ];
       ignoreShellProgramCheck = true;
     };

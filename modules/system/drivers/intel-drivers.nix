@@ -12,19 +12,24 @@ in
   options.drivers.intel = {
     enable = mkEnableOption "Enable Intel Graphics Drivers";
   };
+
   config = mkIf cfg.enable {
-    # OpenGL
     hardware.graphics = {
+      enable = true;
       extraPackages = with pkgs; [
         intel-media-driver
-        vaapiIntel
-        vaapiVdpau
+        vpl-gpu-rt
         libvdpau-va-gl
         mesa
         libglvnd
         vulkan-loader
         libva
       ];
+    };
+
+    environment.variables = {
+      LIBVA_DRIVER_NAME = "iHD";
+      VDPAU_DRIVER = "va_gl";
     };
   };
 }

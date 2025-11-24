@@ -11,13 +11,14 @@
     ./core
   ];
 
+  boot.kernelPackages = pkgs.linuxPackages_zen;
+  #boot.kernelPackages = pkgs.linuxPackages_;
   nix.settings.experimental-features = [
     "nix-command"
     "flakes"
   ];
 
   networking.hostName = "gh0stk"; # Define your hostname.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
   networking.firewall = rec {
     allowedTCPPortRanges = [
       {
@@ -30,14 +31,10 @@
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
-  # Enable networking
   networking.networkmanager.enable = true;
 
-  # Set your time zone.
   time.timeZone = "America/Sao_Paulo";
 
-  # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
 
   i18n.extraLocaleSettings = {
@@ -56,8 +53,8 @@
 
   nixpkgs.config.allowUnfree = true;
 
-  # services.auto-cpufreq.enable = true;
-  # services.thermald.enable = true;
+  services.auto-cpufreq.enable = true;
+  services.thermald.enable = true;
 
   system.stateVersion = "25.05";
 }

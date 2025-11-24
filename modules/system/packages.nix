@@ -4,21 +4,18 @@
     # Desktop apps
     telegram-desktop
     obsidian
-    discord
     kdePackages.ark
-    vivaldi
-    firefox
     (brave.override {
       commandLineArgs = [
         "--password-store=gnome"
       ];
     })
     gparted
+
+    # CLI utils
     mpv
     exfatprogs
     upower
-
-    # CLI utils
     tree
     wget
     git
@@ -31,35 +28,21 @@
     qemu
     avahi
 
-    # Notifications
-    libnotify
-
     # WM and Wayland stuff
-    wayland
-    xwayland
     xwayland-satellite
     wl-clipboard
     cliphist
     zsh
     eza
-    xdg-user-dirs
-    xdg-utils
-    polkit_gnome
-    libsecret
-    gnome-keyring
 
     # Sound
-    pipewire
-    pulseaudio
     pamixer
     pavucontrol
 
     # Other
     home-manager
-    libsForQt5.qt5.qtsvg
     libsForQt5.qtstyleplugins
     libsForQt5.qt5ct
-    libsForQt5.qtgraphicaleffects
     kdePackages.qt6ct
     kdePackages.qtstyleplugin-kvantum
     cowsay
@@ -70,6 +53,6 @@
   fonts.packages = with pkgs; [
     font-awesome
     nerd-fonts.monaspace
-    monaspace
+    nerd-fonts.symbols-only
   ];
 }
