@@ -27,20 +27,23 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
+    nix-flatpak = {
+      url = "github:gmodena/nix-flatpak/?ref=v0.6.0";
+    };
+
     quickshell = {
       url = "git+https://git.outfoxxed.me/outfoxxed/quickshell";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
     # niri-blurry = {
-    #   url = "github:visualglitch91/niri/feat/blur";
-    #   flake = false;
+    #   url = "github:visualglitch91/niri/2bc06170c36d613dad88ccf26cec8ca5e379d76e";
+    #   inputs.rust-overlay.follows = "";
     # };
 
     noctalia = {
       url = "github:noctalia-dev/noctalia-shell";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
-      inputs.quickshell.follows = "quickshell";
     };
   };
 
@@ -68,9 +71,9 @@
         inherit system;
         modules = [
           ./modules/system/configuration.nix
-          inputs.niri-flake.nixosModules.niri
           nur.modules.nixos.default
           inputs.stylix.nixosModules.stylix
+          inputs.nix-flatpak.nixosModules.nix-flatpak
         ];
         specialArgs = {
           inherit unstable;
@@ -86,6 +89,8 @@
           ./modules/home/home.nix
           inputs.niri-flake.homeModules.niri
           inputs.stylix.homeModules.stylix
+          noctalia.homeModules.default
+          nur.modules.homeManager.default
         ];
         extraSpecialArgs = {
           inherit inputs;

@@ -1,18 +1,17 @@
 <div style="display: flex; align-items: center; justify-content: center;">
     <p style="margin: 0; padding: 0;">
-        <img src="https://i.imgur.com/X5zKxvp.png" width="18" style="margin-right: 5px; position: relative; top: 4px;">My Config NixOs
+        <img src="https://i.imgur.com/X5zKxvp.png" width="18" style="margin-right: 5px; position: relative; top: 4px;">My NixOs Config
     </p>
 </div>
 
-
 ## Previews
-![Preview1](./assets/previews/Screenshot%20from%202025-11-01%2021-38-27.png)
-![Preview2](./assets/previews/Screenshot%20from%202025-11-01%2021-38-16.png)
-![Preview3](./assets/previews/Screenshot%20from%202025-11-01%2021-38-55.png)
+![Preview1](./assets/previews/preview1.png)
+![Preview2](./assets/previews/preview2.png)
+![Preview3](./assets/previews/preview3.png)
 
 <details>
   <summary>SDDM</summary>
-  <img src="./assets/previews/Screenshot from 2025-11-01 21-39-19.png"/>
+  <img src="./assets/previews/preview4.png"/>
 </details>
 
 ## Packages
