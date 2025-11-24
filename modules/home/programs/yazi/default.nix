@@ -86,7 +86,7 @@
       opener = {
         pdf = [
           {
-            run = ''zathura "$@" '';
+            run = ''sioyek "$@" '';
             orphan = true;
             for = "unix";
           }

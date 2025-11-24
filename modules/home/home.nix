@@ -18,22 +18,24 @@
       gnome.gvfs
       nautilus
       bc
-      ibus
       imagemagick
-      ueberzug
       unstable.pokemon-colorscripts
       unstable.gowall
       qimgv
-      krita
+      gpu-screen-recorder
+      prismlauncher
+      librewolf
+      usbutils
+      usbredir
+      # Bootloader
+      android-tools
     ];
 
     sessionVariables = {
-      GTK_IM_MODULE = "ibus";
       TERMINAL = "wezterm";
       EDITOR = "nvim";
     };
 
-    file."Pictures/Wallpapers/".source = ../../assets/wallpapers;
     file.".face".source = ../../assets/profile.jpg;
   };
 

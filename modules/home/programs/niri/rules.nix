@@ -4,9 +4,9 @@
 
     settings = {
       layer-rules = [
-        { matches = [ { namespace = "^quickshell-wallpaper$"; } ]; }
+        { matches = [ { namespace = "^noctalia-wallpaper*"; } ]; }
         {
-          matches = [ { namespace = "^quickshell-overview$"; } ];
+          matches = [ { namespace = "^noctalia-overview*"; } ];
           place-within-backdrop = true;
         }
       ];

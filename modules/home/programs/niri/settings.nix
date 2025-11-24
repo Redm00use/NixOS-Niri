@@ -27,7 +27,7 @@
       };
 
       layout = {
-        gaps = 4;
+        gaps = 8;
 
         center-focused-column = "never";
 
@@ -81,14 +81,14 @@
 
       environment = {
         SSH_AUTH_SOCK = "/run/user/1000/keyring/ssh";
+        XDG_CURRENT_DESKTOP = "niri";
+        XDG_SESSION_DESKTOP = "niri";
+        QT_QPA_PLATFORMTHEME = "qt5ct";
         DISPLAY = ":0";
         QS_ICON_THEME = "Papirus-Dark";
       };
 
       spawn-at-startup = [
-        { command = [ "dbus-update-activation-environment --systemd --all" ]; }
-        { command = [ "eval $(gnome-keyring-daemon --start --components=pkcs11,secrets,ssh,gpg)" ]; }
-        # { command = [ "systemctl --user start polkit-gnome-authentication-agent-1.service" ]; }
         { command = [ "${pkgs.polkit_gnome}/bin/polkit-gnome-authentication-agent-1" ]; }
         { command = [ "noctalia-shell" ]; }
         { command = [ "xwayland-satellite" ]; }

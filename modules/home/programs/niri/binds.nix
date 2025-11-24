@@ -24,6 +24,13 @@
       "launcher"
       "clipboard"
     ];
+    "Mod+W".action = spawn [
+      "noctalia-shell"
+      "ipc"
+      "call"
+      "wallpaper"
+      "toggle"
+    ];
     "Mod+P".action = spawn [
       "noctalia-shell"
       "ipc"

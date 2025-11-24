@@ -2,6 +2,7 @@
   imports = [
     ./niri
     ./stylix
+    ./web-apps
     ./noctalia
     ./fastfetch
     ./wezterm
@@ -9,7 +10,7 @@
     ./btop
     ./zsh
     ./cava
-    ./zathura
+    ./sioyek
     ./lazygit
     ./coding
   ];

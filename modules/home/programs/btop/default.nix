@@ -3,8 +3,6 @@
     enable = true;
 
     settings = {
-      # color_theme = "kanagawa";
-
       truecolor = true;
 
       net_iface = "";

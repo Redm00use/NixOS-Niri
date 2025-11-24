@@ -24,7 +24,10 @@
     initContent = ''
       export PATH="$HOME/.cache/npm/global/bin:$PATH"
       export PATH="$HOME/.nix-profile/bin:$PATH"
+
       export QS_ICON_THEME="Papirus-Dark"
+
+      precmd() { echo; }
     '';
 
     oh-my-zsh = {

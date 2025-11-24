@@ -22,7 +22,6 @@
     gcc
     gnumake
     lazydocker
-    jq
     fd
     ripgrep
     go
@@ -32,7 +31,7 @@
     laravel
 
     # LSPs
-    vtsls
+    nodePackages.typescript-language-server
     nodePackages.intelephense
     nodePackages.vscode-langservers-extracted
     nodePackages.eslint_d
