@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   unstable,
   ...
@@ -22,13 +23,14 @@
       unstable.pokemon-colorscripts
       unstable.gowall
       qimgv
-      gpu-screen-recorder
       prismlauncher
       librewolf
       usbutils
       usbredir
+
       # Bootloader
       android-tools
+      obs-studio
     ];
 
     sessionVariables = {
@@ -43,6 +45,19 @@
     userDirs = {
       enable = true;
       createDirectories = true;
+    };
+  };
+
+  nix.registry = {
+    dev = {
+      from = {
+        id = "dev";
+        type = "indirect";
+      };
+      to = {
+        type = "path";
+        path = "${config.home.homeDirectory}/nixdots";
+      };
     };
   };
 }

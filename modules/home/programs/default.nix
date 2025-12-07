@@ -12,6 +12,5 @@
     ./cava
     ./sioyek
     ./lazygit
-    ./coding
   ];
 }

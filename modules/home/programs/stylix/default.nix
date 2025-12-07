@@ -5,29 +5,31 @@
 }:
 let
   homeDir = config.home.homeDirectory;
+  font = config.stylix.fonts.monospace;
 in
 {
   stylix = {
     enable = true;
     polarity = "dark";
+    # base16Scheme = "${pkgs.base16-schemes}/share/themes/onedark.yaml";
 
     base16Scheme = {
-      base00 = "#1d2021";
-      base01 = "#282828";
-      base02 = "#3c3836";
-      base03 = "#504945";
-      base04 = "#bdae93";
-      base05 = "#d5c4a1";
-      base06 = "#ebdbb2";
-      base07 = "#fbf1c7";
-      base08 = "#d43847";
-      base09 = "#b82c3b";
-      base0A = "#e55f4f";
-      base0B = "#c32d3a";
-      base0C = "#dd434e";
-      base0D = "#9f2231";
-      base0E = "#c72f44";
-      base0F = "#7c1a27";
+      base00 = "#222435";
+      base01 = "#282a40";
+      base02 = "#2d3048";
+      base03 = "#7679A7";
+      base04 = "#585B89";
+      base05 = "#B4B7CF";
+      base06 = "#c7c9e0";
+      base07 = "#e2be7d";
+      base08 = "#E16765";
+      base09 = "#EAA041";
+      base0A = "#EAE852";
+      base0B = "#75BE78";
+      base0C = "#46A3AF";
+      base0D = "#25ABE4";
+      base0E = "#c678dd";
+      base0F = "#9a4f7a";
     };
 
     targets = {
@@ -42,11 +44,11 @@ in
     };
 
     fonts = {
-      serif = config.stylix.fonts.monospace;
-      sansSerif = config.stylix.fonts.monospace;
-      emoji = config.stylix.fonts.monospace;
+      serif = font;
+      sansSerif = font;
+      emoji = font;
       monospace = {
-        name = "MonaspiceRn NF";
+        name = "FiraCode Nerd Font";
       };
     };
 

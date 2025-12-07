@@ -1,13 +1,15 @@
 {
+  config,
   pkgs,
   ...
 }:
 let
+  font = config.stylix.fonts.monospace;
   sddm-astronaut = pkgs.sddm-astronaut.override {
-    embeddedTheme = "japanese_aesthetic";
+    embeddedTheme = "hyprland_kath";
     themeConfig = {
-      Background = "${../../../assets/wallpapers/wallhaven_l86kvl.jpg}";
-      Font = "MonaspiceRn NF";
+      Background = "${../../../assets/wallpapers/wallhaven_je9lmw.jpg}";
+      Font = "${font.name}";
     };
   };
 in

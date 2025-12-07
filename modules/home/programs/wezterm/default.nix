@@ -1,8 +1,12 @@
-{ unstable, ... }:
+{ config, unstable, ... }:
+let
+  font = config.stylix.fonts.monospace;
+in
 {
   programs.wezterm = {
     enable = true;
     package = unstable.wezterm;
+
     enableZshIntegration = true;
 
     extraConfig = ''
@@ -13,24 +17,25 @@
       config.window_close_confirmation = "NeverPrompt"
       config.font = wezterm.font_with_fallback({
           {
-              family = "MonaspiceRn NF",
-              weight = "DemiBold",
+              family = "${font.name}",
+              harfbuzz_features = { "calt", "liga", "dlig", "ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08" },
+              weight = "Bold",
               italic = false,
           },
       })
-      config.font_rules = {
+      --[[config.font_rules = {
           {
               intensity = "Half",
               italic = false,
-              font = wezterm.font("MonaspiceRn NF", { weight = "Bold", stretch = "Normal" }),
+              font = wezterm.font("${font.name}", { weight = "Bold", stretch = "Normal" }),
           },
           {
               intensity = "Half",
               italic = true,
-              font = wezterm.font("MonaspiceRn NF", { weight = "Bold", stretch = "Normal", style = "Italic" }),
+              font = wezterm.font("${font.name}", { weight = "Bold", stretch = "Normal", style = "Italic" }),
           },
-      }
-      config.font_size = 12.4
+      }]]
+      config.font_size = 12
       config.custom_block_glyphs = true
       config.mouse_wheel_scrolls_tabs = false
       config.warn_about_missing_glyphs = false

@@ -1,7 +1,5 @@
 {
   config,
-  pkgs,
-  unstable,
   ...
 }:
 {
@@ -9,6 +7,7 @@
     with config.lib.stylix.colors;
     let
       homeDir = config.home.homeDirectory;
+      font = config.stylix.fonts.monospace;
     in
     {
       enable = true;
@@ -30,6 +29,7 @@
         mSurfaceVariant = "#${base01}";
         mTertiary = "#${base0D}";
       };
+
       settings = {
         "appLauncher" = {
           "customLaunchPrefix" = "";
@@ -41,10 +41,10 @@
           "sortByMostUsed" = true;
           "terminalCommand" = "wezterm start --";
           "useApp2Unit" = false;
-          "viewMode" = "list";
+          "viewMode" = "grid";
         };
         "audio" = {
-          "cavaFrameRate" = 60;
+          "cavaFrameRate" = 30;
           "externalMixer" = "pwvucontrol || pavucontrol";
           "mprisBlacklist" = [ ];
           "preferredPlayer" = "";
@@ -58,35 +58,24 @@
           "capsuleOpacity" = 1;
           "density" = "comfortable";
           "exclusive" = true;
-          "floating" = true;
+          "floating" = false;
           "marginHorizontal" = 0.25;
-          "marginVertical" = 0.55;
+          "marginVertical" = 0.5;
           "monitors" = [ ];
-          "outerCorners" = false;
+          "outerCorners" = true;
           "position" = "right";
           "showCapsule" = true;
           "widgets" = {
             "center" = [
               {
-                "id" = "Spacer";
-                "width" = 20;
-              }
-              {
                 "characterCount" = 2;
-                "followFocusedScreen" = false;
+                "followFocusedScreen" = true;
                 "hideUnoccupied" = true;
                 "id" = "Workspace";
                 "labelMode" = "none";
               }
             ];
             "left" = [
-              {
-                "colorizeDistroLogo" = false;
-                "customIconPath" = "";
-                "icon" = "";
-                "id" = "ControlCenter";
-                "useDistroLogo" = true;
-              }
               {
                 "customFont" = "";
                 "formatHorizontal" = "HH:mm ddd, MMM dd";
@@ -96,55 +85,70 @@
                 "usePrimaryColor" = true;
               }
               {
-                "displayMode" = "onhover";
-                "id" = "Brightness";
+                "diskPath" = "/";
+                "id" = "SystemMonitor";
+                "showCpuTemp" = true;
+                "showCpuUsage" = true;
+                "showDiskUsage" = true;
+                "showMemoryAsPercent" = true;
+                "showMemoryUsage" = true;
+                "showNetworkStats" = false;
+                "usePrimaryColor" = true;
               }
               {
+                "hideMode" = "hidden";
+                "hideWhenIdle" = false;
+                "id" = "MediaMini";
+                "maxWidth" = 145;
+                "scrollingMode" = "hover";
+                "showAlbumArt" = true;
+                "showArtistFirst" = true;
+                "showProgressRing" = true;
+                "showVisualizer" = false;
+                "useFixedWidth" = false;
+                "visualizerType" = "linear";
+              }
+            ];
+            "right" = [
+              {
+                "blacklist" = [ ];
+                "colorizeIcons" = true;
+                "drawerEnabled" = true;
+                "id" = "Tray";
+                "pinned" = [ ];
+              }
+              { "id" = "ScreenRecorder"; }
+              {
                 "displayMode" = "onhover";
-                "id" = "Volume";
+                "id" = "VPN";
               }
               {
                 "hideWhenZero" = true;
                 "id" = "NotificationHistory";
                 "showUnreadBadge" = true;
               }
-              { "id" = "ScreenRecorder"; }
               {
-                "blacklist" = [ ];
-                "colorizeIcons" = false;
-                "drawerEnabled" = true;
-                "id" = "Tray";
-                "pinned" = [ ];
-              }
-            ];
-            "right" = [
-              {
-                "hideMode" = "hidden";
-                "hideWhenIdle" = false;
-                "id" = "MediaMini";
-                "maxWidth" = 145;
-                "scrollingMode" = "never";
-                "showAlbumArt" = true;
-                "showArtistFirst" = true;
-                "showProgressRing" = true;
-                "showVisualizer" = true;
-                "useFixedWidth" = true;
-                "visualizerType" = "wave";
+                "deviceNativePath" = "";
+                "displayMode" = "onhover";
+                "id" = "Battery";
+                "warningThreshold" = 30;
               }
               {
-                "displayMode" = "alwaysShow";
-                "id" = "VPN";
+                "displayMode" = "onhover";
+                "id" = "Volume";
               }
               {
-                "diskPath" = "/";
-                "id" = "SystemMonitor";
-                "showCpuTemp" = true;
-                "showCpuUsage" = true;
-                "showDiskUsage" = false;
-                "showMemoryAsPercent" = true;
-                "showMemoryUsage" = true;
-                "showNetworkStats" = false;
-                "usePrimaryColor" = true;
+                "displayMode" = "onhover";
+                "id" = "Brightness";
+              }
+              {
+                "colorizeDistroLogo" = false;
+                "colorizeSystemIcon" = "none";
+                "customIconPath" = "";
+                "enableColorization" = false;
+                "icon" = "cat";
+                "id" = "ControlCenter";
+                "useDistroLogo" = true;
               }
             ];
           };
@@ -154,16 +158,36 @@
           "enableDdcSupport" = false;
           "enforceMinimum" = true;
         };
+        "calendar" = {
+          "cards" = [
+            {
+              "enabled" = true;
+              "id" = "calendar-header-card";
+            }
+            {
+              "enabled" = true;
+              "id" = "calendar-month-card";
+            }
+            {
+              "enabled" = true;
+              "id" = "timer-card";
+            }
+            {
+              "enabled" = false;
+              "id" = "weather-card";
+            }
+          ];
+        };
         "changelog" = {
           "lastSeenVersion" = "";
         };
         "colorSchemes" = {
           "darkMode" = true;
-          "generateTemplatesForPredefined" = false;
+          "generateTemplatesForPredefined" = true;
           "manualSunrise" = "06:30";
           "manualSunset" = "18:30";
           "matugenSchemeType" = "scheme-fruit-salad";
-          "predefinedScheme" = "Gruvbox";
+          "predefinedScheme" = "Noctalia (default)";
           "schedulingMode" = "off";
           "useWallpaperColors" = false;
         };
@@ -209,13 +233,12 @@
         "dock" = {
           "backgroundOpacity" = 1;
           "colorizeIcons" = false;
-          "displayMode" = "always_visible";
+          "displayMode" = "auto_hide";
           "enabled" = false;
           "floatingRatio" = 1;
           "monitors" = [ ];
           "onlySameOutput" = true;
           "pinnedApps" = [ ];
-          "radiusRatio" = 0.6;
           "size" = 1;
         };
         "general" = {
@@ -223,14 +246,16 @@
           "animationDisabled" = false;
           "animationSpeed" = 1;
           "avatarImage" = "${homeDir}/.face";
+          "boxRadiusRatio" = 1;
           "compactLockScreen" = false;
-          "dimmerOpacity" = 0.4;
+          "dimmerOpacity" = 0.5;
           "enableShadows" = true;
           "forceBlackScreenCorners" = false;
+          "iRadiusRatio" = 1;
           "language" = "";
           "lockOnSuspend" = true;
           "radiusRatio" = 1;
-          "scaleRatio" = 0.9500000000000001;
+          "scaleRatio" = 0.9;
           "screenRadiusRatio" = 1;
           "shadowDirection" = "bottom_right";
           "shadowOffsetX" = 2;
@@ -241,12 +266,12 @@
         "hooks" = {
           "darkModeChange" = "";
           "enabled" = false;
-          "wallpaperChange" = "cp $1 ~/.wallpaper || rm -rf ~/.wallpaper && cp $1 ~/.wallpaper";
+          "wallpaperChange" = "";
         };
         "location" = {
           "analogClockInCalendar" = false;
           "firstDayOfWeek" = -1;
-          "name" = "Goiânia, Go";
+          "name" = "Goiânia";
           "showCalendarEvents" = true;
           "showCalendarWeather" = true;
           "showWeekNumberInCalendar" = false;
@@ -283,6 +308,11 @@
           "autoHideMs" = 2000;
           "backgroundOpacity" = 1;
           "enabled" = true;
+          "enabledTypes" = [
+            0
+            1
+            2
+          ];
           "location" = "top_right";
           "monitors" = [ ];
           "overlayLayer" = true;
@@ -336,26 +366,31 @@
           ];
           "showHeader" = true;
         };
-        "settingsVersion" = 23;
-        "setupCompleted" = true;
+        "settingsVersion" = 26;
         "systemMonitor" = {
           "cpuCriticalThreshold" = 90;
+          "cpuPollingInterval" = 3000;
           "cpuWarningThreshold" = 80;
-          "criticalColor" = "#d43847";
+          "criticalColor" = "";
           "diskCriticalThreshold" = 90;
+          "diskPollingInterval" = 3000;
           "diskWarningThreshold" = 80;
           "memCriticalThreshold" = 90;
+          "memPollingInterval" = 3000;
           "memWarningThreshold" = 80;
+          "networkPollingInterval" = 3000;
           "tempCriticalThreshold" = 90;
+          "tempPollingInterval" = 3000;
           "tempWarningThreshold" = 80;
           "useCustomColors" = false;
-          "warningColor" = "#9f2231";
+          "warningColor" = "";
         };
         "templates" = {
           "alacritty" = false;
           "cava" = false;
           "code" = false;
           "discord" = false;
+          "emacs" = false;
           "enableUserTemplates" = false;
           "foot" = false;
           "fuzzel" = false;
@@ -363,6 +398,7 @@
           "gtk" = false;
           "kcolorscheme" = false;
           "kitty" = false;
+          "niri" = false;
           "pywalfox" = false;
           "qt" = false;
           "spicetify" = false;
@@ -372,24 +408,23 @@
           "wezterm" = false;
         };
         "ui" = {
-          "fontDefault" = "MonaspiceRn NF";
+          "fontDefault" = "${font.name}";
           "fontDefaultScale" = 1;
-          "fontFixed" = "MonaspiceRn Nerd Font Mono";
-          "fontFixedScale" = 1.1;
+          "fontFixed" = "${font.name}";
+          "fontFixedScale" = 1;
           "panelBackgroundOpacity" = 1;
           "panelsAttachedToBar" = true;
-          "settingsPanelAttachToBar" = false;
+          "settingsPanelAttachToBar" = true;
           "tooltipsEnabled" = true;
         };
         "wallpaper" = {
-          "defaultWallpaper" = "${../../../../assets/wallpapers/wallhaven_6qojow.jpg}";
           "directory" = "${homeDir}/nixdots/assets/wallpapers";
           "enableMultiMonitorDirectories" = false;
           "enabled" = true;
           "fillColor" = "#000000";
           "fillMode" = "crop";
           "hideWallpaperFilenames" = true;
-          "monitors" = [ ];
+          "monitorDirectories" = [ ];
           "overviewEnabled" = true;
           "panelPosition" = "follow_bar";
           "randomEnabled" = false;
@@ -410,5 +445,6 @@
           "wallhavenSorting" = "relevance";
         };
       };
+
     };
 }

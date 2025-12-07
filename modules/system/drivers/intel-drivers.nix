@@ -20,6 +20,8 @@ in
         intel-media-driver
         vpl-gpu-rt
         libvdpau-va-gl
+        intel-media-driver
+        intel-vaapi-driver
         mesa
         libglvnd
         vulkan-loader

@@ -13,7 +13,7 @@
 
       window-rules = [
         {
-          opacity = 1.0;
+          opacity = 0.9;
           draw-border-with-background = false;
 
           focus-ring = {
@@ -64,6 +64,7 @@
             { app-id = "edge"; }
             { app-id = "brave-browser"; }
           ];
+          opacity = 1.0;
           open-maximized = true;
         }
         {

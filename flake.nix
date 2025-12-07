@@ -2,10 +2,10 @@
   description = "Viitorags NixOs Configuration";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
 
     home-manager = {
-      url = "github:nix-community/home-manager/release-25.05";
+      url = "github:nix-community/home-manager/release-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -14,7 +14,7 @@
     mynvim.url = "github:viitorags/nvim";
 
     stylix = {
-      url = "github:nix-community/stylix/release-25.05";
+      url = "github:nix-community/stylix/release-25.11";
     };
 
     niri-flake = {
@@ -65,6 +65,15 @@
         inherit system;
         config.allowUnfree = true;
       };
+
+      pkgs = import nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+      };
+
+      dev = import ./dev {
+        inherit pkgs unstable mynvim;
+      };
     in
     {
       nixosConfigurations.gh0stk = nixpkgs.lib.nixosSystem {
@@ -81,15 +90,15 @@
         };
       };
       homeConfigurations.vitor = home-manager.lib.homeManagerConfiguration {
-        pkgs = import nixpkgs {
-          inherit system;
-          config.allowUnfree = true;
-        };
+        pkgs = pkgs;
         modules = [
           ./modules/home/home.nix
           inputs.niri-flake.homeModules.niri
           inputs.stylix.homeModules.stylix
           noctalia.homeModules.default
+          {
+            home.packages = dev.extraPackages;
+          }
           nur.modules.homeManager.default
         ];
         extraSpecialArgs = {
@@ -100,5 +109,7 @@
           inherit noctalia;
         };
       };
+
+      devShells."${system}" = dev.devShells;
     };
 }
