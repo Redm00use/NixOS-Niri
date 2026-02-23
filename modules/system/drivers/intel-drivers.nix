@@ -14,6 +14,7 @@ in
   };
 
   config = mkIf cfg.enable {
+    services.xserver.videoDrivers = [ "intel" ];
     hardware.graphics = {
       enable = true;
       extraPackages = with pkgs; [

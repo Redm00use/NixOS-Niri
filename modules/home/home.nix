@@ -2,40 +2,75 @@
   config,
   pkgs,
   unstable,
+  lib,
+  role ? "desktop",
   ...
 }:
+let
+  isDesktop = role == "desktop";
+in
 {
   imports = [
     ./programs
   ];
 
-  nixpkgs.config.allowUnfree = true;
-
   home = {
     username = "vitor";
-    homeDirectory = "/home/vitor";
+    homeDirectory = lib.mkForce "/home/vitor";
     stateVersion = "25.05";
-    packages = with pkgs; [
-      gnome.gvfs
-      nautilus
-      bc
-      imagemagick
-      unstable.pokemon-colorscripts
-      unstable.gowall
-      qimgv
-      prismlauncher
-      librewolf
-      usbutils
-      usbredir
+    packages =
+      with pkgs;
+      [
+        gnome.gvfs
+        nautilus
+        bc
+        imagemagick
+        qimgv
+        usbutils
+        usbredir
+        gpu-screen-recorder
+        prismlauncher
+        (writeShellApplication {
+          name = "minecraft";
+          runtimeInputs = [
+            gamemode
+            prismlauncher
+            util-linux
+          ];
+          text = ''
+            exec taskset -c 0-3 gamemoderun prismlauncher
+          '';
+        })
+      ]
+      ++ lib.optionals isDesktop [
+        unstable.gowall
+        krita
+        system-config-printer
+        libreoffice
+        pokemon-colorscripts
+        prismlauncher
+        android-tools
+        obs-studio
+        (writeShellApplication {
+          name = "scrolllock_keyboard";
+          text = ''
+            state=$(cat /sys/class/leds/input6::scrolllock/brightness)
 
-      # Bootloader
-      android-tools
-      obs-studio
-    ];
+            if [ "$state" -eq 1 ]; then
+              brightnessctl -d input6::scrolllock set 0
+            else
+              brightnessctl -d input6::scrolllock set 1
+            fi
+          '';
+        })
+      ];
 
     sessionVariables = {
       TERMINAL = "wezterm";
       EDITOR = "nvim";
+      WLR_DRM_NO_ATOMIC = 1;
+      QT_QPA_PLATFORM = "wayland;xcb";
+      NIXOS_OZONE_WL = "1";
     };
 
     file.".face".source = ../../assets/profile.jpg;

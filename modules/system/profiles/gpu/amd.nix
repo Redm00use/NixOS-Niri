@@ -7,3 +7,4 @@
   drivers.nvidia.enable = false;
   drivers.intel.enable = false;
 }
+

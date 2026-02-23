@@ -8,7 +8,7 @@
       #   origin = "flathub";
       # }
       {
-        appId = "";
+        appId = "org.vinegarhq.Sober";
         origin = "flathub";
       }
     ];

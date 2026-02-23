@@ -10,8 +10,6 @@
 
     excludePackages = [ pkgs.xterm ];
 
-    videoDrivers = [ "modesetting" ];
-
     deviceSection = ''
       Option "AccelMethod" "none"
     '';

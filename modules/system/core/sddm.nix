@@ -8,7 +8,7 @@ let
   sddm-astronaut = pkgs.sddm-astronaut.override {
     embeddedTheme = "hyprland_kath";
     themeConfig = {
-      Background = "${../../../assets/wallpapers/wallhaven_je9lmw.jpg}";
+      Background = "${../../../assets/wallpapers/wallhaven_rdwjj7.jpg}";
       Font = "${font.name}";
     };
   };

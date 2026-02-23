@@ -1,59 +1,75 @@
-{ pkgs, inputs, ... }:
 {
-  environment.systemPackages = with pkgs; [
-    # Desktop apps
-    telegram-desktop
-    obsidian
-    kdePackages.ark
-    (brave.override {
-      commandLineArgs = [
-        "--password-store=gnome"
-      ];
-    })
-    gparted
+  pkgs,
+  unstable,
+  lib,
+  role ? "desktop",
+  ...
+}:
+let
+  isDesktop = role == "desktop";
+in
+{
+  environment.systemPackages =
+    with pkgs;
+    [
+      telegram-desktop
+      kdePackages.ark
+      (brave.override {
+        commandLineArgs = [
+          "--password-store=gnome"
+          "--enable-features=VaapiVideoDecoder"
+          "--disable-features=Vp9Decoder,Av1Decoder,WebRtcAllowInputVolumeAdjustment"
+          "--use-gl=egl"
+          "--ignore-gpu-blocklist"
+          "--disable-gpu-rasterization"
+          "--disable-oop-rasterization"
+          "--enable-features=BatterySaverModeAvailable"
+        ];
+      })
+      gparted
+      mpv
+      yt-dlp
+      freerdp
+      exfatprogs
+      upower
+      tree
+      wget
+      git
+      unzip
+      unrar
+      ffmpeg
+      zip
+      brightnessctl
+      nixos-shell
+      docker-compose
+      qemu
+      avahi
+      grim
+      slurp
+      xwayland-satellite
+      wl-clipboard
+      wtype
+      cliphist
+      zsh
+      eza
+      pamixer
+      pavucontrol
+      home-manager
+      unstable.libsForQt5.qtstyleplugins
+      unstable.libsForQt5.qt5ct
+      unstable.kdePackages.qt6ct
+      unstable.kdePackages.qtmultimedia
+      unstable.kdePackages.qtstyleplugin-kvantum
+    ]
+    ++ lib.optionals isDesktop [
+      obsidian
+      cowsay
+      cmatrix
+      nbfc-linux
+    ];
 
-    # CLI utils
-    mpv
-    exfatprogs
-    upower
-    tree
-    wget
-    git
-    unzip
-    ffmpeg
-    zip
-    brightnessctl
-    nixos-shell
-    docker-compose
-    qemu
-    avahi
-
-    # WM and Wayland stuff
-    xwayland-satellite
-    wl-clipboard
-    cliphist
-    zsh
-    eza
-
-    # Sound
-    pamixer
-    pavucontrol
-
-    # Other
-    home-manager
-    libsForQt5.qtstyleplugins
-    libsForQt5.qt5ct
-    kdePackages.qt6ct
-    kdePackages.qtstyleplugin-kvantum
-    cowsay
-    cmatrix
-  ];
-
-  # Fonts
   fonts.packages = with pkgs; [
     font-awesome
-    nerd-fonts.jetbrains-mono
-    nerd-fonts.fira-code
-    nerd-fonts.symbols-only
+    nerd-fonts.victor-mono
   ];
 }

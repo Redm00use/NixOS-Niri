@@ -10,8 +10,7 @@
 
   programs.yazi = {
     enable = true;
-    package = unstable.yazi;
-    enableZshIntegration = true;
+    enableNushellIntegration = true;
 
     initLua = ./main.lua;
 

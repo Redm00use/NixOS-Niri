@@ -1,16 +1,13 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 {
-  programs.zsh = {
-    enable = true;
-    enableCompletion = false;
-    enableGlobalCompInit = false;
-  };
+  programs.zsh.enable = true;
 
   users = {
     defaultUserShell = pkgs.zsh;
 
     users.vitor = {
       isNormalUser = true;
+      group = "vitor";
       description = "Vitor";
       extraGroups = [
         "networkmanager"
@@ -19,8 +16,12 @@
         "kvm"
         "libvirtd"
         "plugdev"
+        "video"
+        "input"
       ];
       ignoreShellProgramCheck = true;
     };
+
+    groups.vitor = {};
   };
 }

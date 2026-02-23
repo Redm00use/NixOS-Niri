@@ -1,11 +1,11 @@
 {
-  unstable,
   pkgs,
+  inputs,
   ...
 }:
 {
   programs.niri = {
     enable = true;
-    package = unstable.niri;
+    package = inputs.niri-blur.packages.${pkgs.system}.niri;
   };
 }

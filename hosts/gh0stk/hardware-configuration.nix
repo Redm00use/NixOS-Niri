@@ -12,7 +12,7 @@
 {
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
-    ./profiles/intel
+    ../../modules/system/profiles/gpu/intel.nix
   ];
 
   boot.initrd.availableKernelModules = [
@@ -25,9 +25,23 @@
     "sr_mod"
     "sdhci_pci"
   ];
-  boot.initrd.kernelModules = [ ];
-  boot.kernelModules = [ "kvm-intel" ];
+  boot.initrd.kernelModules = [ "i915" ];
+  boot.kernelModules = [
+    "uinput"
+    "kvm-intel"
+    "ec_sys"
+  ];
+  boot.kernelParams = [
+    "i915.enable_rc6=1"
+    "i915.enable_fbc=1"
+    "i915.enable_guc=2"
+    "intel_iommu=on"
+    "intel_pstate=disable"
+  ];
   boot.extraModulePackages = [ ];
+  boot.extraModprobeConfig = ''
+    options ec_sys write_support=1
+  '';
 
   fileSystems."/" = {
     device = "/dev/disk/by-label/nixos";

@@ -2,36 +2,45 @@
   pkgs,
   unstable,
   mynvim,
+  role ? "desktop",
   ...
 }:
+let
+  isDesktop = role == "desktop";
+in
 {
-  extraPackages = with pkgs; [
-    mynvim.packages.${pkgs.system}.nvim
-    vscode-fhs
-    unstable.dbeaver-bin
-    unstable.github-copilot-cli
-    lazygit
-    gh
-    delta
-    gcc
-    gnumake
-    lazydocker
-    fd
-    jq
-    ripgrep
-    insomnia
-    # LSPs
-    emmet-ls
-    bash-language-server
-    lua-language-server
-    clang-tools
-    nixd
-    # Formatters
-    nixfmt-rfc-style
-    stylua
-    shfmt
-    nodePackages.prettier
-  ];
+  extraPackages =
+    with pkgs;
+    [
+      vscode-fhs
+      mynvim.packages.${stdenv.hostPlatform.system}.nvim
+      gh
+      fd
+      jq
+      ripgrep
+      nodejs
+      shellcheck
+      nixd
+      nil
+      bash-language-server
+      nixfmt-rfc-style
+      gnumake
+      shfmt
+      lazygit
+    ]
+    ++ pkgs.lib.optionals isDesktop [
+      unstable.github-copilot-cli
+      unstable.n8n
+      godot-mono
+      unstable.antigravity
+      insomnia
+      delta
+      lazydocker
+      emmet-ls
+      lua-language-server
+      stylua
+      nodePackages.prettier
+    ];
 
   devShells = {
     php = pkgs.mkShell {
@@ -42,14 +51,29 @@
         nodePackages.intelephense
         (callPackage ../pkgs/php-cs-fixer/package.nix { })
         tailwindcss-language-server
+        phpactor
+        php.packages.php-codesniffer
+        nodePackages.browser-sync
       ];
     };
 
     go = pkgs.mkShell {
       buildInputs = with pkgs; [
         go
-        golangci-lint
-        gopls
+        unstable.gopls
+        libwebp
+      ];
+    };
+
+    rust = pkgs.mkShell {
+      buildInputs = with pkgs; [
+        cargo
+        rustc
+        rust-analyzer
+        clippy
+        rustfmt
+        pkg-config
+        openssl
       ];
     };
 
@@ -57,12 +81,11 @@
       buildInputs = with pkgs; [
         nodejs
         bun
-        nodePackages.typescript-language-server
+        vtsls
         nodePackages.vscode-langservers-extracted
         nodePackages.eslint_d
         unstable.vue-language-server
         tailwindcss-language-server
-        nodePackages.live-server
       ];
     };
 
@@ -71,6 +94,67 @@
         python313
         black
         pyright
+        python313Packages.tkinter
+      ];
+    };
+
+    java = pkgs.mkShell {
+      buildInputs = with pkgs; [
+        openjdk21
+        jdt-language-server
+        maven
+      ];
+    };
+
+    csharp = pkgs.mkShell {
+      buildInputs = with pkgs; [
+        roslyn-ls
+        dotnet-sdk_8
+        dotnet-aspnetcore_8
+        netcoredbg
+      ];
+    };
+
+    C = pkgs.mkShell {
+      nativeBuildInputs = with pkgs; [
+        stdenv.cc
+        clang-tools
+        cmake
+        pkg-config
+        gnumake
+      ];
+
+      buildInputs = with pkgs; [
+        glibc.dev
+        readline
+        editline
+      ];
+
+      shellHook = ''
+        export C_INCLUDE_PATH="${pkgs.glibc.dev}/include:$C_INCLUDE_PATH"
+        export CPLUS_INCLUDE_PATH="${pkgs.glibc.dev}/include:$CPLUS_INCLUDE_PATH"
+      '';
+    };
+
+    flutter = pkgs.mkShell {
+      buildInputs = with pkgs; [
+        flutter
+        android-tools
+        jdk21
+      ];
+    };
+
+    qml = pkgs.mkShell {
+      buildInputs = with pkgs; [
+        quickshell
+        alejandra
+        statix
+        deadnix
+        shfmt
+        shellcheck
+        jsonfmt
+        lefthook
+        kdePackages.qtdeclarative
       ];
     };
   };

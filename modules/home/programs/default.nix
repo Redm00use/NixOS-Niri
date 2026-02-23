@@ -1,16 +1,26 @@
+{ lib,
+  role ? "desktop",
+  ...
+}:
+let
+  isDesktop = role == "desktop";
+in
 {
   imports = [
     ./niri
     ./stylix
-    ./web-apps
-    ./noctalia
-    ./fastfetch
+    ./dms
     ./wezterm
+    ./direnv
     ./yazi
     ./btop
-    ./zsh
-    ./cava
+    ./shell
+    # ./starship
     ./sioyek
+  ]
+  ++ lib.optionals isDesktop [
+    ./fastfetch
+    ./cava
     ./lazygit
   ];
 }

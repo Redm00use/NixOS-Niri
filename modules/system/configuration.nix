@@ -2,23 +2,35 @@
   config,
   pkgs,
   lib,
+  role ? "desktop",
   ...
 }:
 {
   imports = [
-    ./hardware-configuration.nix
     ./packages.nix
     ./core
   ];
 
   boot.kernelPackages = pkgs.linuxPackages_zen;
-  #boot.kernelPackages = pkgs.linuxPackages_;
+  # boot.kernelPackages = pkgs.linuxPackages_latest;
   nix.settings.experimental-features = [
     "nix-command"
     "flakes"
   ];
+  nix.settings.auto-optimise-store = true;
 
-  networking.hostName = "gh0stk"; # Define your hostname.
+  nix.settings = {
+    substituters = [
+      "https://viitorags.cachix.org"
+    ];
+
+    trusted-public-keys = [
+      "viitorags.cachix.org-1:XjszObjD+IWSHIB37cprlJogQkkKgWLtcBRH7pi/gpE="
+    ];
+
+    fallback = false;
+  };
+
   networking.firewall = rec {
     allowedTCPPortRanges = [
       {
@@ -32,6 +44,10 @@
   # networking.proxy.default = "http://user:password@proxy:port/";
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
   networking.networkmanager.enable = true;
+  networking.nameservers = [
+    "1.1.1.2"
+    "8.8.8.8"
+  ];
 
   time.timeZone = "America/Sao_Paulo";
 
@@ -53,8 +69,17 @@
 
   nixpkgs.config.allowUnfree = true;
 
-  services.auto-cpufreq.enable = true;
-  services.thermald.enable = true;
+  services.printing = {
+    enable = true;
+    drivers = with pkgs; [
+      gutenprint
+      epson-escpr
+    ];
+  };
+
+  services.udev.extraRules = ''
+    ACTION=="add", SUBSYSTEM=="block", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="kyber"
+  '';
 
   system.stateVersion = "25.11";
 }

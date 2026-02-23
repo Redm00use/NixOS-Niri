@@ -3,6 +3,7 @@
   security.polkit.enable = true;
   services.gnome.gnome-keyring.enable = true;
   security.pam.services.sddm.enableGnomeKeyring = true;
+  security.pam.services.login.enableGnomeKeyring = true;
   systemd.user.services = {
     polkit-gnome-authentication-agent-1 = {
       description = "polkit-gnome-authentication-agent-1";
