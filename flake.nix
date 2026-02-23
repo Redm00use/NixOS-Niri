@@ -13,9 +13,7 @@
 
     mynvim.url = "github:viitorags/nvim";
 
-    stylix = {
-      url = "github:nix-community/stylix/release-25.11";
-    };
+    stylix.url = "github:nix-community/stylix";
 
     niri-flake = {
       url = "github:sodiboo/niri-flake";
@@ -24,41 +22,37 @@
 
     nur = {
       url = "github:nix-community/NUR";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nix-flatpak = {
-      url = "github:gmodena/nix-flatpak/?ref=v0.6.0";
-    };
+    nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=v0.6.0";
 
-    quickshell = {
-      url = "git+https://git.outfoxxed.me/outfoxxed/quickshell";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
-    # niri-blurry = {
-    #   url = "github:visualglitch91/niri/2bc06170c36d613dad88ccf26cec8ca5e379d76e";
-    #   inputs.rust-overlay.follows = "";
-    # };
+    niri-blur.url = "github:YaLTeR/niri?ref=wip/branch";
 
     noctalia = {
       url = "github:noctalia-dev/noctalia-shell";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+
+    dms = {
+      url = "github:AvengeMedia/DankMaterialShell";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
     {
+      self,
       nixpkgs,
       home-manager,
       nixpkgs-unstable,
       mynvim,
-      quickshell,
       noctalia,
       nur,
       ...
     }@inputs:
     let
+      lib = nixpkgs.lib;
       system = "x86_64-linux";
 
       unstable = import nixpkgs-unstable {
@@ -71,45 +65,92 @@
         config.allowUnfree = true;
       };
 
-      dev = import ./dev {
-        inherit pkgs unstable mynvim;
+      getDev =
+        role:
+        import ./dev {
+          inherit
+            pkgs
+            unstable
+            mynvim
+            role
+            ;
+        };
+
+      sharedHomeManager =
+        {
+          role,
+          hostName,
+        }:
+        let
+          isDesktop = role == "desktop";
+          dev = import ./dev {
+            inherit
+              pkgs
+              unstable
+              mynvim
+              role
+              ;
+          };
+
+          hostHome = ./hosts/${hostName}/home.nix;
+        in
+        {
+          home-manager.useGlobalPkgs = true;
+          home-manager.useUserPackages = true;
+          home-manager.extraSpecialArgs = {
+            inherit
+              inputs
+              unstable
+              mynvim
+              noctalia
+              role
+              isDesktop
+              hostName
+              ;
+          };
+          home-manager.users.vitor = {
+            imports = [
+              ./modules/home/home.nix
+            ]
+            ++ lib.optional (builtins.pathExists ./modules/home/profiles/${role}.nix) ./modules/home/profiles/${role}.nix
+            ++ lib.optional (builtins.pathExists ./modules/home/profiles/${role}-packages.nix) ./modules/home/profiles/${role}-packages.nix
+            ++ [
+              inputs.niri-flake.homeModules.niri
+              inputs.stylix.homeModules.stylix
+              noctalia.homeModules.default
+              inputs.dms.homeModules.dank-material-shell
+            ]
+            ++ lib.optional (builtins.pathExists hostHome) hostHome
+            ++ [
+              {
+                home.packages = dev.extraPackages;
+              }
+            ];
+          };
+        };
+
+      mkHost = import ./lib/mkHost.nix {
+        inherit
+          nixpkgs
+          home-manager
+          inputs
+          nur
+          unstable
+          sharedHomeManager
+          ;
       };
     in
     {
-      nixosConfigurations.gh0stk = nixpkgs.lib.nixosSystem {
-        inherit system;
-        modules = [
-          ./modules/system/configuration.nix
-          nur.modules.nixos.default
-          inputs.stylix.nixosModules.stylix
-          inputs.nix-flatpak.nixosModules.nix-flatpak
-        ];
-        specialArgs = {
-          inherit unstable;
-          inherit inputs;
-        };
-      };
-      homeConfigurations.vitor = home-manager.lib.homeManagerConfiguration {
-        pkgs = pkgs;
-        modules = [
-          ./modules/home/home.nix
-          inputs.niri-flake.homeModules.niri
-          inputs.stylix.homeModules.stylix
-          noctalia.homeModules.default
-          {
-            home.packages = dev.extraPackages;
-          }
-          nur.modules.homeManager.default
-        ];
-        extraSpecialArgs = {
-          inherit inputs;
-          inherit unstable;
-          inherit mynvim;
-          inherit quickshell;
-          inherit noctalia;
-        };
+      nixosConfigurations = {
+        gh0stk = mkHost "gh0stk";
+        slime = mkHost "slime";
       };
 
-      devShells."${system}" = dev.devShells;
+      devShells."${system}" =
+        let
+          desktopShells = (getDev "desktop").devShells;
+          serverShells = (getDev "server").devShells;
+        in
+        desktopShells // serverShells;
     };
 }
