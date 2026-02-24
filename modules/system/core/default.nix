@@ -8,7 +8,6 @@
     ./niri.nix
     ./portals.nix
     ./bluetooth.nix
-    ./bootloader.nix
     ./user.nix
     ./virt-manager.nix
     ./udisk.nix
@@ -16,6 +15,8 @@
     ./polkit.nix
     ./zram.nix
     ./accountservice.nix
+    ./pipewire.nix
+    ./thermald.nix
   ]
   ++ lib.optionals isDesktop [
     ./opentablet.nix
@@ -24,6 +25,5 @@
   ]
   ++ lib.optionals (!isDesktop) [
     ./nbfc.nix
-    ./tlp.nix
   ];
 }

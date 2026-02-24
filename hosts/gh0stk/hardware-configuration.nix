@@ -18,30 +18,22 @@
   boot.initrd.availableKernelModules = [
     "ehci_pci"
     "ahci"
-    "firewire_ohci"
-    "xhci_pci"
+    "usbhid"
     "usb_storage"
     "sd_mod"
-    "sr_mod"
-    "sdhci_pci"
   ];
-  boot.initrd.kernelModules = [ "i915" ];
-  boot.kernelModules = [
-    "uinput"
-    "kvm-intel"
-    "ec_sys"
-  ];
-  boot.kernelParams = [
-    "i915.enable_rc6=1"
-    "i915.enable_fbc=1"
-    "i915.enable_guc=2"
-    "intel_iommu=on"
-    "intel_pstate=disable"
-  ];
+  boot.initrd.kernelModules = [ ];
+  boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
-  boot.extraModprobeConfig = ''
-    options ec_sys write_support=1
-  '';
+
+  fileSystems."/boot" = {
+    device = "/dev/disk/by-label/boot";
+    fsType = "vfat";
+    options = [
+      "fmask=0077"
+      "dmask=0077"
+    ];
+  };
 
   fileSystems."/" = {
     device = "/dev/disk/by-label/nixos";
@@ -51,8 +43,6 @@
   swapDevices = [
     { device = "/dev/disk/by-label/swap"; }
   ];
-
-  networking.useDHCP = lib.mkDefault true;
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;

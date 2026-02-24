@@ -6,7 +6,7 @@
 }:
 {
   programs.dank-material-shell = {
-    enable = true;
+    enable = false;
     quickshell.package = unstable.quickshell;
     enableSystemMonitoring = true;
     enableDynamicTheming = false;

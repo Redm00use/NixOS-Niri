@@ -87,7 +87,7 @@
     spawn-at-startup "eval $(gnome-keyring-daemon --start --components=pkcs11,secrets,ssh,gpg)"
     spawn-at-startup "${pkgs.polkit_gnome}/bin/polkit-gnome-authentication-agent-1"
     spawn-at-startup "xwayland-satellite"
-    spawn-sh-at-startup "dms run"
+    spawn-sh-at-startup "noctalia-shell"
     spawn-at-startup "wl-paste --type text --watch cliphist store"
     spawn-at-startup "wl-paste --type image --watch cliphist store"
 
@@ -164,13 +164,13 @@
     }
 
     binds {
-      Mod+V { spawn "dms" "ipc" "call" "clipboard" "toggle"; }
-      Mod+W { spawn "dms" "ipc" "call" "dankdash" "wallpaper"; }
+      Mod+A { spawn "noctalia-shell" "ipc" "call" "launcher" "toggle"; }
+      Mod+V { spawn "noctalia-shell" "ipc" "call" "launcher" "clipboard"; }
+      Mod+W { spawn "noctalia-shell" "ipc" "call" "wallpaper" "toggle"; }
+      Mod+P { spawn "noctalia-shell" "ipc" "call" "sessionMenu" "toggle"; }
       Scroll_Lock { spawn "scrolllock_keyboard"; }
-      Mod+P { spawn "dms" "ipc" "call" "powermenu" "toggle"; }
       Mod+E { spawn "wezterm" "start" "--" "yazi"; }
       Mod+C { spawn "wezterm" "start" "--" "nvim"; }
-      Mod+A { spawn "dms" "ipc" "call" "launcher" "toggle"; }
       Mod+B { spawn "brave"; }
       Alt+Insert { screenshot-window write-to-disk=true; }
       Ctrl+Alt+Delete { quit; }
@@ -290,7 +290,7 @@
     }
 
     layer-rule {
-      match namespace="dms:blurwallpaper"
+      match namespace="^noctalia-overview*"
       place-within-backdrop true
     }
 

@@ -6,5 +6,19 @@
   ];
 
   networking.hostName = "gh0stk";
-  networking.interfaces.wlo1.mtu = 1450;
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+
+  services.tlp = {
+    enable = true;
+    settings = {
+      CPU_SCALING_GOVERNOR_ON_AC = "performance";
+
+      INTEL_GPU_MIN_FREQ_ON_AC = 350;
+      INTEL_GPU_MAX_FREQ_ON_AC = 1050;
+
+      CPU_MAX_PERF_ON_AC = 100;
+      CPU_BOOST_ON_AC = 1;
+    };
+  };
 }

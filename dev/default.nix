@@ -29,8 +29,6 @@ in
       lazygit
     ]
     ++ pkgs.lib.optionals isDesktop [
-      unstable.github-copilot-cli
-      unstable.n8n
       godot-mono
       unstable.antigravity
       insomnia
