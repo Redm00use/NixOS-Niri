@@ -25,6 +25,12 @@
   boot.initrd.kernelModules = [ ];
   boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
+  boot.kernelParams = [
+    "i915.enable_rc6=1"
+    "i915.enable_fbc=1"
+    "i915.fastboot=1"
+    "video=SVIDEO-1:d"
+  ];
 
   fileSystems."/boot" = {
     device = "/dev/disk/by-label/boot";

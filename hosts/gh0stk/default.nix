@@ -6,6 +6,7 @@
   ];
 
   networking.hostName = "gh0stk";
+
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
@@ -16,9 +17,10 @@
 
       INTEL_GPU_MIN_FREQ_ON_AC = 350;
       INTEL_GPU_MAX_FREQ_ON_AC = 1050;
+      INTEL_GPU_BOOST_FREQ_ON_AC = 1050;
 
-      CPU_MAX_PERF_ON_AC = 100;
-      CPU_BOOST_ON_AC = 1;
+      SOUND_POWER_SAVE_ON_AC = 0;
+      WIFI_PWR_ON_AC = "off";
     };
   };
 }
