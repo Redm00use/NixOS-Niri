@@ -60,7 +60,7 @@ in
       unstable.kdePackages.qt6ct
       unstable.kdePackages.qtmultimedia
       unstable.kdePackages.qtstyleplugin-kvantum
-      barrier
+      input-leap
     ]
     ++ lib.optionals isDesktop [
       obsidian
