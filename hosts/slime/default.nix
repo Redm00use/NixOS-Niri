@@ -11,6 +11,8 @@
   boot.loader.grub.device = "/dev/sda";
   boot.loader.grub.useOSProber = true;
 
+  services.xserver.xkb.options = "scrolllock:none";
+
   services.tlp = {
     enable = true;
     settings = {
