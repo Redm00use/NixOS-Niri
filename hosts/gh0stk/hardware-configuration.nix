@@ -30,6 +30,7 @@
     "i915.enable_fbc=1"
     "i915.fastboot=1"
     "video=SVIDEO-1:d"
+    "snd_hda_intel.model=auto"
   ];
 
   fileSystems."/boot" = {
