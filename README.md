@@ -7,11 +7,10 @@
 ## Previews
 ![Preview1](./assets/previews/preview1.png)
 ![Preview2](./assets/previews/preview2.png)
-![Preview3](./assets/previews/preview3.png)
 
 <details>
   <summary>SDDM</summary>
-  <img src="./assets/previews/preview4.png"/>
+  <img src="./assets/previews/preview3.png"/>
 </details>
 
 ## Packages
