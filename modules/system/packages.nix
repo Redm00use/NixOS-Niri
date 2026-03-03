@@ -42,6 +42,7 @@ in
       brightnessctl
       nixos-shell
       docker-compose
+      docker
       qemu
       avahi
       grim

@@ -1,4 +1,5 @@
-{ lib,
+{
+  lib,
   role ? "desktop",
   ...
 }:
@@ -9,7 +10,7 @@ in
   imports = [
     ./niri
     ./stylix
-    ./dms
+    ./noctalia
     ./wezterm
     ./direnv
     ./yazi
@@ -22,5 +23,6 @@ in
     ./fastfetch
     ./cava
     ./lazygit
+    ./vesktop
   ];
 }

@@ -5,8 +5,6 @@ in
 {
   programs.wezterm = {
     enable = true;
-    package = unstable.wezterm;
-
     enableZshIntegration = true;
 
     extraConfig = ''
@@ -16,7 +14,8 @@ in
        config.enable_wayland = true
        config.enable_tab_bar = false
        config.window_close_confirmation = "NeverPrompt"
-       config.front_end = "OpenGL"
+       config.cursor_blink_ease_in = "Constant"
+       config.cursor_blink_ease_out = "Constant"
        config.line_height = 1.5
        config.font = wezterm.font_with_fallback({
        	{

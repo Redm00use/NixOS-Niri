@@ -22,6 +22,7 @@
     ./opentablet.nix
     ./gamemode.nix
     ./flatpak.nix
+    ./docker.nix
   ]
   ++ lib.optionals (!isDesktop) [
     ./nbfc.nix

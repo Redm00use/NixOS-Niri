@@ -104,6 +104,7 @@
     }
 
     binds {
+      Mod+Return { spawn "wezterm" "start"; }
       Mod+A { spawn "noctalia-shell" "ipc" "call" "launcher" "toggle"; }
       Mod+V { spawn "noctalia-shell" "ipc" "call" "launcher" "clipboard"; }
       Mod+W { spawn "noctalia-shell" "ipc" "call" "wallpaper" "toggle"; }
@@ -169,7 +170,6 @@
       Mod+Period { expel-window-from-column; }
       Mod+Q { close-window; }
       Mod+R { switch-preset-column-width; }
-      Mod+Return { spawn "wezterm" "start"; }
       Mod+Right { focus-column-right; }
       Mod+Shift+1 { move-column-to-workspace 1; }
       Mod+Shift+2 { move-column-to-workspace 2; }
@@ -234,6 +234,13 @@
       place-within-backdrop true
     }
 
+    layer-rule {
+      match namespace="noctalia-background-.*$"
+      background-effect {
+        xray false
+      }
+    }
+
     window-rule {
       opacity 0.7
       draw-border-with-background false
@@ -276,6 +283,7 @@
       match app-id="firefox"
       match app-id="chromium-browser"
       match app-id="edge"
+      match app-id="brave-browser"
       open-maximized true
     }
 
