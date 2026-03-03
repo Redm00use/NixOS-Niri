@@ -38,6 +38,11 @@
       url = "github:AvengeMedia/DankMaterialShell";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    quickshell = {
+      url = "git+https://git.outfoxxed.me/quickshell/quickshell";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -65,6 +70,25 @@
         config.allowUnfree = true;
       };
 
+      theme16 = {
+        base00 = "#1d2021";
+        base01 = "#282828";
+        base02 = "#3c3836";
+        base03 = "#504945";
+        base04 = "#bdae93";
+        base05 = "#d5c4a1";
+        base06 = "#ebdbb2";
+        base07 = "#fbf1c7";
+        base08 = "#d43847";
+        base09 = "#b82c3b";
+        base0A = "#e55f4f";
+        base0B = "#c32d3a";
+        base0C = "#dd434e";
+        base0D = "#9f2231";
+        base0E = "#c72f44";
+        base0F = "#7c1a27";
+      };
+
       getDev =
         role:
         import ./dev {
@@ -80,6 +104,7 @@
         {
           role,
           hostName,
+          theme16,
         }:
         let
           isDesktop = role == "desktop";
@@ -106,6 +131,7 @@
               role
               isDesktop
               hostName
+              theme16
               ;
           };
           home-manager.users.vitor = {
@@ -137,6 +163,7 @@
           nur
           unstable
           sharedHomeManager
+          theme16
           ;
       };
     in

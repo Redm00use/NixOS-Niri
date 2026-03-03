@@ -7,6 +7,7 @@
   nur,
   sharedHomeManager,
   unstable,
+  theme16,
 }:
 name:
 let
@@ -26,6 +27,7 @@ nixpkgs.lib.nixosSystem {
       role
       isDesktop
       hostName
+      theme16
       ;
   };
   modules = [
@@ -35,7 +37,7 @@ nixpkgs.lib.nixosSystem {
     inputs.nix-flatpak.nixosModules.nix-flatpak
     home-manager.nixosModules.home-manager
     (sharedHomeManager {
-      inherit role hostName;
+      inherit role hostName theme16;
     })
   ];
 }
