@@ -38,6 +38,8 @@ in
       lua-language-server
       stylua
       nodePackages.prettier
+      clang-tools
+      gcc
     ];
 
   devShells = {
