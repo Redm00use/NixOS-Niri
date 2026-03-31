@@ -4,7 +4,7 @@ import re
 import sys
 
 
-GPU_CHOICES = {"1": ("AMD", "amd"), "2": ("NVIDIA", "nvidia"), "3": ("Intel", "intel")}
+GPU_CHOICES = {"1": ("AMD", "amd"), "2": ("NVIDIA", "nvidia"), "3": ("Intel", "intel"), "4": ("VM", "vm")}
 FILESYSTEM_CHOICES = {"1": ("btrfs", "btrfs"), "2": ("ext4", "ext4")}
 ROLE_CHOICES = {"1": ("desktop", "desktop"), "2": ("server", "server")}
 TIMEZONE_CHOICES = {
@@ -21,8 +21,9 @@ PRESET_CHOICES = {
     "1": ("desktop-amd", "desktop-amd"),
     "2": ("desktop-nvidia", "desktop-nvidia"),
     "3": ("desktop-intel", "desktop-intel"),
-    "4": ("server", "server"),
-    "5": ("custom", "custom"),
+    "4": ("vm", "vm"),
+    "5": ("server", "server"),
+    "6": ("custom", "custom"),
 }
 
 

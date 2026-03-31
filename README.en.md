@@ -91,6 +91,7 @@
 > Live installer mode fully wipes the selected disk.
 > Always verify the target disk, partition layout, and `LUKS` / `swap` / `/home` options before installation.
 > On a different machine you still need a hardware-specific `hardware-configuration.nix`.
+> For virtual machines, you can use the dedicated `vm` GPU mode.
 
 ## 📦 Installation
 
