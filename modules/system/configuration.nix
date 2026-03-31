@@ -12,6 +12,9 @@
   imports = [
     ./packages.nix
     ./core
+    ./drivers/amd-drivers.nix
+    ./drivers/intel-drivers.nix
+    ./drivers/nvidia-drivers.nix
     ./profiles/gpu/select.nix
     ./profiles/storage
   ];
