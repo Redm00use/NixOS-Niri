@@ -1,86 +1,112 @@
-# NixOS Niri
+<div align="center">
+	<img src="./assets/previews/preview-main.png" width="900px">
+	<h1>NixOS Niri</h1>
+	<p>NixOS configuration built around <b>niri</b>, <b>Noctalia</b>, <b>Home Manager</b>, and a portable <b>Python Installer</b>.</p>
+	<a href="./README.md">
+		<img src="https://img.shields.io/badge/README-RU-cba6f7?style=for-the-badge&labelColor=1C2325">
+	</a>
+	<a href="./README.en.md">
+		<img src="https://img.shields.io/badge/README-ENG-89b4fa?style=for-the-badge&labelColor=1C2325">
+	</a>
+</div>
 
-[Русская версия](./README.md)
+***
 
-Modern NixOS configuration built around `niri`, `Home Manager`, `Noctalia`, and a portable Python installer for both host generation and full live installation.
+<table align="right">
+	<tr>
+		<td colspan="2" align="center">System Overview</td>
+	</tr>
+	<tr>
+		<th>Component</th>
+		<th>Value</th>
+	</tr>
+	<tr>
+		<td>OS</td>
+		<td>NixOS 25.11</td>
+	</tr>
+	<tr>
+		<td>WM</td>
+		<td>niri</td>
+	</tr>
+	<tr>
+		<td>Shell</td>
+		<td>zsh</td>
+	</tr>
+	<tr>
+		<td>Terminal</td>
+		<td>wezterm</td>
+	</tr>
+	<tr>
+		<td>Panel</td>
+		<td>Noctalia</td>
+	</tr>
+	<tr>
+		<td>Browser</td>
+		<td>Zen Browser</td>
+	</tr>
+	<tr>
+		<td>File Manager</td>
+		<td>Nautilus</td>
+	</tr>
+	<tr>
+		<td>Editor</td>
+		<td>Zed / Neovim</td>
+	</tr>
+	<tr>
+		<td>Audio</td>
+		<td>PipeWire</td>
+	</tr>
+	<tr>
+		<td>Bootloader</td>
+		<td>systemd-boot</td>
+	</tr>
+	<tr>
+		<td>Theming</td>
+		<td>Stylix</td>
+	</tr>
+	<tr>
+		<td>Installer</td>
+		<td>Python TUI</td>
+	</tr>
+</table>
 
-## Preview
+<div align="left">
+	<h3>📝 About</h3>
+	<p>
+	This is a portable <b>NixOS</b> setup for a desktop built on <b>niri</b> with <b>Home Manager</b>, <b>Noctalia</b>, dynamic host configs, and a built-in Python installer.
+	</p>
+	<h3>🚀 Features</h3>
+	<p>
+	• Wayland desktop powered by <b>niri</b><br>
+	• Launcher, clipboard, wallpaper, and session menu through <b>Noctalia</b><br>
+	• Dynamic flake hosts via <code>hosts/&lt;hostName&gt;</code><br>
+	• Step-by-step Python installer for host generation and live install<br>
+	• GPU selection: <b>AMD</b>, <b>NVIDIA</b>, <b>Intel</b><br>
+	• Support for <b>LUKS</b>, swap, separate <code>/home</code>, and <b>btrfs</b> subvolumes<br>
+	• Non-interactive mode for automation<br>
+	</p>
+</div>
 
-![Preview](./assets/previews/preview-main.png)
+> [!WARNING]
+> Live installer mode fully wipes the selected disk.
+> Always verify the target disk, partition layout, and `LUKS` / `swap` / `/home` options before installation.
+> On a different machine you still need a hardware-specific `hardware-configuration.nix`.
 
-## Highlights
+## 📦 Installation
 
-- `niri` Wayland desktop
-- `Noctalia` shell / launcher / clipboard / wallpaper menu
-- dynamic flake hosts from `hosts/<hostName>`
-- built-in Python installer with interactive TUI
-- full live-install flow for NixOS
-- GPU selection: `AMD`, `NVIDIA`, `Intel`
-- optional `LUKS`, swap, separate `/home`, `btrfs` subvolumes
-- non-interactive installer mode for automation
-
-## Stack
-
-- **WM** — `niri`
-- **Shell** — `zsh`
-- **Terminal** — `wezterm`
-- **Panel / Launcher** — `Noctalia`
-- **Browser** — `Zen Browser`
-- **File Manager** — `Nautilus`
-- **Editor** — `Zed` / `Neovim`
-
-## Real Keybinds
-
-`Mod` is the `Super` key.
-
-| Shortcut | Action |
-| --- | --- |
-| `Mod+Return` | Open `wezterm` |
-| `Mod+A` | Toggle Noctalia launcher |
-| `Mod+V` | Open clipboard menu |
-| `Mod+W` | Toggle wallpaper panel |
-| `Mod+X` | Toggle session / power menu |
-| `Mod+Z` | Launch Zen Browser |
-| `Mod+E` | Open Nautilus |
-| `Mod+C` | Open Zed |
-| `Mod+T` | Open Telegram |
-| `Mod+Q` | Close focused window |
-| `Mod+Space` | Toggle floating mode |
-| `Mod+O` | Toggle overview |
-| `Mod+F` | Maximize column |
-| `Mod+Shift+F` | Fullscreen window |
-| `Mod+1..9` | Focus workspace 1..9 |
-| `Mod+Shift+1..9` | Move column to workspace 1..9 |
-| `Mod+H / J / K / L` | Navigate left / down / up / right |
-| `Mod+Ctrl+H / J / K / L` | Move column / window |
-| `Mod+Shift+H / J / K / L` | Focus monitor |
-| `Mod+Shift+Ctrl+H / J / K / L` | Move column to monitor |
-| `Mod+R` | Switch preset column width |
-| `Mod+Shift+R` | Switch preset window height |
-| `Mod+=` / `Mod+-` | Adjust column width |
-| `Mod+Shift+=` / `Mod+Shift+-` | Adjust window height |
-| `Mod+Alt+Shift+4` | Screenshot |
-| `Mod+Shift+Slash` | Show hotkey overlay |
-| `Mod+Shift+P` | Power off monitors |
-| `Ctrl+Alt+Delete` | Quit niri |
-| `Mod+Shift+E` | Quit niri |
-| `Scroll_Lock` | Toggle scroll lock keyboard helper |
-
-## Installer
-
-Interactive mode:
+### Interactive mode
 
 ```bash
 python3 ./scripts/install.py
 ```
 
-Live install:
+### Full live installation
 
 ```bash
 sudo python3 ./scripts/install.py
 ```
 
-Example non-interactive install:
+### Example non-interactive install
 
 ```bash
 sudo python3 ./scripts/install.py \
@@ -97,40 +123,70 @@ sudo python3 ./scripts/install.py \
   --yes
 ```
 
-## What the installer can do
+### What the installer can do
 
-- create a new host under `hosts/<hostName>`
-- generate `meta.nix`
-- partition and format disk for live install
-- configure `EFI + root`
-- optionally create `swap`
-- optionally create separate `/home`
-- optionally enable `LUKS`
-- create `btrfs` subvolumes when needed
-- capture `PARTUUID` / `UUID` for runtime storage config
+1. Create a new host under `hosts/<hostName>`
+2. Generate `meta.nix`
+3. Partition and format a disk in live mode
+4. Configure `EFI + root`
+5. Optionally create `swap`
+6. Optionally create a separate `/home`
+7. Optionally enable `LUKS`
+8. Create `btrfs` subvolumes
+9. Save `PARTUUID` / `UUID` for runtime storage config
 
-## Apply Config
+### Apply an existing host config
 
 ```bash
 sudo nixos-rebuild switch --flake .#<hostName>
 ```
 
-## Project Layout
+## ⌨️ Real Keybinds
 
-- `flake.nix` — flake entry and dynamic host discovery
+`Mod` is the `Super` key.
+
+| Action | Shortcut |
+| --- | --- |
+| Open terminal | `Mod+Return` |
+| Toggle launcher | `Mod+A` |
+| Open clipboard menu | `Mod+V` |
+| Toggle wallpaper menu | `Mod+W` |
+| Toggle session menu | `Mod+X` |
+| Launch Zen Browser | `Mod+Z` |
+| Open Nautilus | `Mod+E` |
+| Open Zed | `Mod+C` |
+| Open Telegram | `Mod+T` |
+| Close window | `Mod+Q` |
+| Toggle floating mode | `Mod+Space` |
+| Toggle overview | `Mod+O` |
+| Maximize column | `Mod+F` |
+| Fullscreen window | `Mod+Shift+F` |
+| Workspace 1..9 | `Mod+1..9` |
+| Move to workspace 1..9 | `Mod+Shift+1..9` |
+| Navigate windows / columns | `Mod+H / J / K / L` |
+| Move windows / columns | `Mod+Ctrl+H / J / K / L` |
+| Navigate monitors | `Mod+Shift+H / J / K / L` |
+| Move column to monitor | `Mod+Shift+Ctrl+H / J / K / L` |
+| Change column width | `Mod+=` / `Mod+-` |
+| Change window height | `Mod+Shift+=` / `Mod+Shift+-` |
+| Screenshot | `Mod+Alt+Shift+4` |
+| Show hotkey overlay | `Mod+Shift+Slash` |
+| Power off monitors | `Mod+Shift+P` |
+| Quit `niri` | `Ctrl+Alt+Delete` / `Mod+Shift+E` |
+| Scroll Lock helper | `Scroll_Lock` |
+
+## 🗂️ Project Layout
+
+- `flake.nix` — flake entry and automatic host discovery
 - `lib/mkHost.nix` — host builder from metadata
 - `hosts/<hostName>` — host-specific files
-- `modules/system` — system configuration
-- `modules/home` — home-manager configuration
+- `modules/system` — system modules
+- `modules/home` — Home Manager modules
 - `scripts/install.py` — installer entrypoint
 - `scripts/installer` — modular installer implementation
 
-## Notes
+## 📝 Notes
 
-- `meta.nix` stores `hostName`, `userName`, `gpuType`, `role`, `timeZone`, `defaultLocale`, and storage metadata.
+- `meta.nix` stores `hostName`, `userName`, `gpuType`, `role`, `timeZone`, `defaultLocale`, and storage metadata
 - runtime storage behavior is extended by `modules/system/profiles/storage/default.nix`
-- keyboard layout is `us,ru` with `Caps Lock` switching layouts
-
-## Russian README
-
-- `README.ru.md`
+- keyboard layout is `us,ru`, switched with `Caps Lock`
