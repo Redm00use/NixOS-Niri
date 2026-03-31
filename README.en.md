@@ -113,6 +113,7 @@ Installer now supports presets:
 - `desktop-amd`
 - `desktop-nvidia`
 - `desktop-intel`
+- `vm`
 - `server`
 - `custom`
 
@@ -169,6 +170,8 @@ python3 ./scripts/install.py --import-json install-profile.json
 13. Write install logs to `.installer-logs/`
 14. Export / import answers to `json`
 15. Clean up mounts / swap on install failure
+16. Show disks as a selectable list instead of requiring manual typing
+17. Supports arrow-key disk selection with Enter, with a fallback to the plain list mode
 
 ### Apply an existing host config
 

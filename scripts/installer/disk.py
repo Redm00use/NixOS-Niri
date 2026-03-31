@@ -1,29 +1,105 @@
 from __future__ import annotations
 
 import os
+import json
 import shutil
 import sys
+import curses
 from pathlib import Path
 
 from .common import CRYPT_NAME, REPO_ROOT, blkid_value, partition_suffix, run, shlex_quote
 
 
+def list_disks() -> list[dict]:
+    result = subprocess_output([
+        "lsblk",
+        "-J",
+        "-d",
+        "-e",
+        "7,11",
+        "-o",
+        "NAME,SIZE,MODEL,TRAN,TYPE",
+    ])
+    payload = json.loads(result)
+    return [device for device in payload.get("blockdevices", []) if device.get("type") == "disk"]
+
+
+def subprocess_output(command: list[str]) -> str:
+    import subprocess
+    completed = subprocess.run(command, capture_output=True, text=True, check=True)
+    return completed.stdout
+
+
 def prompt_disk() -> str:
-    print("\nДоступные диски:")
-    run(["lsblk", "-d", "-e", "7,11", "-o", "NAME,SIZE,MODEL,TRAN"])
-    disk = input("Укажи диск для установки, например /dev/nvme0n1: ").strip()
-    if not disk.startswith("/dev/"):
-        print("Ошибка: укажи путь вида /dev/sdX или /dev/nvme0n1")
+    disks = list_disks()
+    if not disks:
+        print("Ошибка: не найдено подходящих дисков.")
         sys.exit(1)
-    return disk
+
+    try:
+        return prompt_disk_curses(disks)
+    except Exception:
+        pass
+
+    print("\nДоступные диски:")
+    for index, device in enumerate(disks, start=1):
+        name = device.get("name", "?")
+        size = device.get("size", "?")
+        model = device.get("model") or "unknown"
+        transport = device.get("tran") or "-"
+        print(f"{index}) /dev/{name}  |  {size}  |  {transport}  |  {model}")
+    while True:
+        answer = input("Номер диска [1]: ").strip() or "1"
+        if answer.isdigit() and 1 <= int(answer) <= len(disks):
+            return f"/dev/{disks[int(answer) - 1]['name']}"
+        print("Неверный выбор, попробуй снова.")
+
+
+def prompt_disk_curses(disks: list[dict]) -> str:
+    def _selector(stdscr):
+        curses.curs_set(0)
+        stdscr.keypad(True)
+        selected = 0
+
+        while True:
+            stdscr.clear()
+            stdscr.addstr(0, 0, "Выбор диска")
+            stdscr.addstr(1, 0, "Стрелки ↑/↓ — выбрать, Enter — подтвердить, q — выйти")
+            stdscr.addstr(2, 0, "-" * 72)
+
+            for index, device in enumerate(disks):
+                name = f"/dev/{device.get('name', '?')}"
+                size = device.get("size", "?")
+                model = device.get("model") or "unknown"
+                transport = device.get("tran") or "-"
+                prefix = ">" if index == selected else " "
+                line = f"{prefix} {name:<14} | {size:<8} | {transport:<6} | {model}"
+                if index == selected:
+                    stdscr.attron(curses.A_REVERSE)
+                    stdscr.addstr(4 + index, 0, line[: max(1, curses.COLS - 1)])
+                    stdscr.attroff(curses.A_REVERSE)
+                else:
+                    stdscr.addstr(4 + index, 0, line[: max(1, curses.COLS - 1)])
+
+            key = stdscr.getch()
+            if key in (curses.KEY_UP, ord("k")):
+                selected = (selected - 1) % len(disks)
+            elif key in (curses.KEY_DOWN, ord("j")):
+                selected = (selected + 1) % len(disks)
+            elif key in (10, 13, curses.KEY_ENTER):
+                return f"/dev/{disks[selected]['name']}"
+            elif key in (ord("q"), 27):
+                raise SystemExit(1)
+
+    return curses.wrapper(_selector)
 
 
 def confirm_disk_name(disk: str) -> None:
     print("\nТекущая разметка дисков:")
     run(["lsblk", "-o", "NAME,SIZE,FSTYPE,TYPE,MOUNTPOINTS"])
-    answer = input(f"Для подтверждения введи точное имя диска [{disk}]: ").strip()
-    if answer != disk:
-        print("Ошибка: имя диска не совпало. Отменено.")
+    answer = input("Подтвердить выбор диска? [y/N]: ").strip().lower()
+    if answer != "y":
+        print("Отменено.")
         sys.exit(1)
 
 

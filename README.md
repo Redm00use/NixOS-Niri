@@ -113,6 +113,7 @@ Installer теперь умеет presets:
 - `desktop-amd`
 - `desktop-nvidia`
 - `desktop-intel`
+- `vm`
 - `server`
 - `custom`
 
@@ -169,6 +170,8 @@ python3 ./scripts/install.py --import-json install-profile.json
 13. Пишет лог установки в `.installer-logs/`
 14. Умеет экспорт / импорт ответов в `json`
 15. Делает cleanup mount / swap при ошибке установки
+16. Показывает диски списком, чтобы можно было выбрать номером
+17. Поддерживает TUI-выбор диска стрелками и Enter, с fallback на обычный список
 
 ### Применение существующего host-конфига
 
