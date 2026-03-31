@@ -12,20 +12,9 @@ in
   environment.systemPackages =
     with pkgs;
     [
+      codex
       telegram-desktop
       kdePackages.ark
-      (brave.override {
-        commandLineArgs = [
-          "--password-store=gnome"
-          "--enable-features=VaapiVideoDecoder"
-          "--disable-features=Vp9Decoder,Av1Decoder,WebRtcAllowInputVolumeAdjustment"
-          "--use-gl=egl"
-          "--ignore-gpu-blocklist"
-          "--disable-gpu-rasterization"
-          "--disable-oop-rasterization"
-          "--enable-features=BatterySaverModeAvailable"
-        ];
-      })
       gparted
       mpv
       yt-dlp
@@ -40,9 +29,8 @@ in
       ffmpeg
       zip
       brightnessctl
+      playerctl
       nixos-shell
-      docker-compose
-      docker
       qemu
       avahi
       grim
@@ -51,6 +39,7 @@ in
       wl-clipboard
       wtype
       cliphist
+      eww
       zsh
       eza
       pamixer
@@ -71,6 +60,8 @@ in
 
   fonts.packages = with pkgs; [
     font-awesome
-    nerd-fonts.victor-mono
+    nerd-fonts.jetbrains-mono
+    noto-fonts
+    noto-fonts-color-emoji
   ];
 }

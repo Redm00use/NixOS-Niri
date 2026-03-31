@@ -1,5 +1,6 @@
 {
   lib,
+  userName ? "kotlin",
   hostName ? null,
   role ? "desktop",
   ...
@@ -17,9 +18,9 @@
           if hostName != null && hostName != "" then
             hostName
           else if role == "desktop" then
-            "gh0stk"
+            userName
           else
-            "slime";
+            userName;
       in
       {
         rb = "sudo nixos-rebuild switch --flake ${flakeDir}#${host}";
@@ -38,6 +39,11 @@
       export PATH="$HOME/.cache/npm/global/bin:$HOME/.nix-profile/bin:$PATH"
 
       KEYTIMEOUT=1
+
+      if [[ -o interactive ]] && [[ -z "$FASTFETCH_SHOWN" ]] && [[ "$TERM" != "dumb" ]] && command -v fastfetch >/dev/null 2>&1; then
+        export FASTFETCH_SHOWN=1
+        fastfetch
+      fi
     '';
 
     oh-my-zsh = {

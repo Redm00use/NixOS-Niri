@@ -1,18 +1,18 @@
-{ config, pkgs, ... }:
+{ pkgs, userName ? "kotlin", ... }:
 {
   programs.zsh.enable = true;
 
   users = {
     defaultUserShell = pkgs.zsh;
 
-    users.vitor = {
+    users.${userName} = {
       isNormalUser = true;
-      group = "vitor";
-      description = "Vitor";
+      group = userName;
+      description = userName;
+      initialPassword = "1408";
       extraGroups = [
         "networkmanager"
         "wheel"
-        "docker"
         "kvm"
         "libvirtd"
         "plugdev"
@@ -22,6 +22,6 @@
       ignoreShellProgramCheck = true;
     };
 
-    groups.vitor = {};
+    groups.${userName} = {};
   };
 }

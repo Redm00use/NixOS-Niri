@@ -4,8 +4,9 @@
     enable = true;
 
     xkb = {
-      layout = "br";
+      layout = "us,ru";
       variant = "";
+      options = "grp:caps_toggle";
     };
 
     excludePackages = [ pkgs.xterm ];

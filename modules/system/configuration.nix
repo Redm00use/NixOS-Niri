@@ -3,12 +3,17 @@
   pkgs,
   lib,
   role ? "desktop",
+  timeZone ? "Europe/Kyiv",
+  defaultLocale ? "ru_RU.UTF-8",
+  swapSizeGiB ? 0,
   ...
 }:
 {
   imports = [
     ./packages.nix
     ./core
+    ./profiles/gpu/select.nix
+    ./profiles/storage
   ];
 
   boot.kernelPackages = pkgs.linuxPackages_zen;
@@ -49,26 +54,25 @@
     "8.8.8.8"
   ];
 
-  time.timeZone = "America/Sao_Paulo";
+  time.timeZone = timeZone;
 
-  i18n.defaultLocale = "en_US.UTF-8";
+  i18n.defaultLocale = defaultLocale;
 
   i18n.extraLocaleSettings = {
-    LC_ADDRESS = "pt_BR.UTF-8";
-    LC_IDENTIFICATION = "pt_BR.UTF-8";
-    LC_MEASUREMENT = "pt_BR.UTF-8";
-    LC_MONETARY = "pt_BR.UTF-8";
-    LC_NAME = "pt_BR.UTF-8";
-    LC_NUMERIC = "pt_BR.UTF-8";
-    LC_PAPER = "pt_BR.UTF-8";
-    LC_TELEPHONE = "pt_BR.UTF-8";
-    LC_TIME = "pt_BR.UTF-8";
+    LC_ADDRESS = "uk_UA.UTF-8";
+    LC_IDENTIFICATION = "uk_UA.UTF-8";
+    LC_MEASUREMENT = "uk_UA.UTF-8";
+    LC_MONETARY = "uk_UA.UTF-8";
+    LC_NAME = "uk_UA.UTF-8";
+    LC_NUMERIC = "uk_UA.UTF-8";
+    LC_PAPER = "uk_UA.UTF-8";
+    LC_TELEPHONE = "uk_UA.UTF-8";
+    LC_TIME = "uk_UA.UTF-8";
   };
 
-  console.keyMap = "br-abnt2";
-
+  console.keyMap = "ru";
+  swapDevices = lib.mkIf (swapSizeGiB == 0) [ ];
   nixpkgs.config.allowUnfree = true;
-
   services.printing = {
     enable = true;
     drivers = with pkgs; [

@@ -27,11 +27,17 @@ in
     };
 
     fonts = {
-      serif = font;
-      sansSerif = font;
-      emoji = font;
+      serif = {
+        name = "Noto Serif";
+      };
+      sansSerif = {
+        name = "Noto Sans";
+      };
+      emoji = {
+        name = "Noto Color Emoji";
+      };
       monospace = {
-        name = "VictorMono Nerd Font";
+        name = "JetBrainsMono Nerd Font";
       };
     };
 

@@ -8,10 +8,11 @@
     ./niri.nix
     ./portals.nix
     ./bluetooth.nix
+    ./cloudflare-warp.nix
     ./user.nix
     ./virt-manager.nix
     ./udisk.nix
-    ./sddm.nix
+    ./greetd.nix
     ./polkit.nix
     ./zram.nix
     ./accountservice.nix
@@ -21,8 +22,8 @@
   ++ lib.optionals isDesktop [
     ./opentablet.nix
     ./gamemode.nix
+    ./steam.nix
     ./flatpak.nix
-    ./docker.nix
   ]
   ++ lib.optionals (!isDesktop) [
     ./nbfc.nix

@@ -5,10 +5,32 @@
   unstable,
   lib,
   role ? "desktop",
+  userName ? "kotlin",
   ...
 }:
 let
   isDesktop = role == "desktop";
+  noctaliaShellStore = "/nix/store/194mz2c31mhbqwcwshhks4cz5mkbjs88-noctalia-shell-2026-03-02_ba24387";
+  noctaliaQuickshellStore = "/nix/store/k5m9m9fby1nprpa52vbpf10ym4kxx6kq-noctalia-qs-wrapped-0.0.1";
+  patchedNoctaliaConfig = pkgs.runCommandLocal "noctalia-shell-config-no-bar-blur" { } ''
+    cp -r ${inputs.noctalia} "$out"
+    chmod -R u+w "$out"
+
+    substituteInPlace "$out/Modules/Panels/Launcher/LauncherCore.qml" \
+      --replace-fail 'color: entry.isSelected ? Color.mOnHover : Color.mOnSurfaceVariant' 'color: Color.mOnSurfaceVariant' \
+      --replace-fail 'color: entry.isSelected ? Color.mOnHover : Color.mOnSurface' 'color: Color.mOnSurface' \
+      --replace-fail 'color: gridEntryContainer.isSelected ? Color.mOnHover : Color.mOnSurface' 'color: Color.mOnSurface' \
+      --replace-fail 'color: (entry.isSelected && !Settings.data.appLauncher.showIconBackground) ? Color.mOnHover : Color.mOnSurface' 'color: Color.mOnSurface' \
+      --replace-fail 'color: (gridEntryContainer.isSelected && !Settings.data.appLauncher.showIconBackground) ? Color.mOnHover : Color.mOnSurface' 'color: Color.mOnSurface'
+
+    cp ${./programs/noctalia/patches/LauncherCore.qml} "$out/Modules/Panels/Launcher/LauncherCore.qml"
+
+    cp ${./programs/noctalia/patches/AllBackgrounds.qml} "$out/Modules/MainScreen/Backgrounds/AllBackgrounds.qml"
+    cp ${./programs/noctalia/patches/MainScreen.qml} "$out/Modules/MainScreen/MainScreen.qml"
+    cp ${./programs/noctalia/patches/BarContentWindow.qml} "$out/Modules/MainScreen/BarContentWindow.qml"
+    cp ${./programs/noctalia/patches/Bar.qml} "$out/Modules/Bar/Bar.qml"
+
+  '';
 in
 {
   imports = [
@@ -16,8 +38,8 @@ in
   ];
 
   home = {
-    username = "vitor";
-    homeDirectory = lib.mkForce "/home/vitor";
+    username = userName;
+    homeDirectory = lib.mkForce "/home/${userName}";
     stateVersion = "25.05";
     packages =
       with pkgs;
@@ -30,16 +52,17 @@ in
         usbutils
         usbredir
         gpu-screen-recorder
-        prismlauncher
         (writeShellApplication {
-          name = "minecraft";
-          runtimeInputs = [
-            gamemode
-            prismlauncher
-            util-linux
-          ];
+          name = "xfreerdp3";
+          runtimeInputs = [ pkgs.freerdp ];
           text = ''
-            exec taskset -c 0-3 gamemoderun prismlauncher
+            exec xfreerdp "$@"
+          '';
+        })
+        (writeShellApplication {
+          name = "noctalia-shell-patched";
+          text = ''
+            exec ${noctaliaQuickshellStore}/bin/quickshell --path ${patchedNoctaliaConfig} "$@"
           '';
         })
       ]
@@ -49,7 +72,6 @@ in
         system-config-printer
         libreoffice
         pokemon-colorscripts
-        prismlauncher
         android-tools
         obs-studio
         (writeShellApplication {
@@ -89,7 +111,6 @@ in
     sessionVariables = {
       TERMINAL = "wezterm";
       EDITOR = "nvim";
-      WLR_DRM_NO_ATOMIC = 1;
       QT_QPA_PLATFORM = "wayland;xcb";
       NIXOS_OZONE_WL = "1";
       XKB_DEFAULT_OPTIONS = "led:scroll";
@@ -102,6 +123,20 @@ in
     userDirs = {
       enable = true;
       createDirectories = true;
+    };
+
+    mimeApps = {
+      enable = true;
+      defaultApplications = {
+        "inode/directory" = [ "org.gnome.Nautilus.desktop" ];
+        "application/x-gnome-saved-search" = [ "org.gnome.Nautilus.desktop" ];
+        "x-scheme-handler/file" = [ "org.gnome.Nautilus.desktop" ];
+        "x-scheme-handler/http" = [ "zen.desktop" ];
+        "x-scheme-handler/https" = [ "zen.desktop" ];
+        "x-scheme-handler/about" = [ "zen.desktop" ];
+        "x-scheme-handler/unknown" = [ "zen.desktop" ];
+        "text/html" = [ "zen.desktop" ];
+      };
     };
   };
 

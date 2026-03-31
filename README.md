@@ -48,6 +48,6 @@ git clone https://github.com/viitorags/nixdots.git
 
 cd nixdots
 
-sudo nixos-rebuild switch --flake .#gh0stk
+sudo nixos-rebuild switch --flake .#Kotlin
 home-manager switch --flake .
 ```

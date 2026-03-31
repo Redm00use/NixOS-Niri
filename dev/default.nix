@@ -12,7 +12,6 @@ in
   extraPackages =
     with pkgs;
     [
-      vscode-fhs
       mynvim.packages.${stdenv.hostPlatform.system}.nvim
       gh
       fd
@@ -30,8 +29,7 @@ in
     ]
     ++ pkgs.lib.optionals isDesktop [
       godot-mono
-      unstable.antigravity
-      insomnia
+      unstable.zed-editor
       delta
       lazydocker
       emmet-ls

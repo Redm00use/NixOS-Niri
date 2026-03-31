@@ -1,5 +1,5 @@
 {
-  description = "Viitorags NixOs Configuration";
+  description = "Kotlin NixOS Configuration";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
@@ -43,6 +43,11 @@
       url = "git+https://git.outfoxxed.me/quickshell/quickshell";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    zen-browser = {
+      url = "github:youwen5/zen-browser-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -71,22 +76,22 @@
       };
 
       theme16 = {
-        base00 = "#1d2021";
-        base01 = "#282828";
-        base02 = "#3c3836";
-        base03 = "#504945";
-        base04 = "#bdae93";
-        base05 = "#d5c4a1";
-        base06 = "#ebdbb2";
-        base07 = "#fbf1c7";
-        base08 = "#d43847";
-        base09 = "#b82c3b";
-        base0A = "#e55f4f";
-        base0B = "#c32d3a";
-        base0C = "#dd434e";
-        base0D = "#9f2231";
-        base0E = "#c72f44";
-        base0F = "#7c1a27";
+        base00 = "#1e1e2e";
+        base01 = "#181825";
+        base02 = "#313244";
+        base03 = "#45475a";
+        base04 = "#585b70";
+        base05 = "#cdd6f4";
+        base06 = "#f5e0dc";
+        base07 = "#b4befe";
+        base08 = "#f38ba8";
+        base09 = "#fab387";
+        base0A = "#f9e2af";
+        base0B = "#a6e3a1";
+        base0C = "#94e2d5";
+        base0D = "#89b4fa";
+        base0E = "#cba6f7";
+        base0F = "#f2cdcd";
       };
 
       getDev =
@@ -104,6 +109,9 @@
         {
           role,
           hostName,
+          userName,
+          timeZone,
+          defaultLocale,
           theme16,
         }:
         let
@@ -122,6 +130,7 @@
         {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
+          stylix.enableReleaseChecks = false;
           home-manager.extraSpecialArgs = {
             inherit
               inputs
@@ -131,10 +140,13 @@
               role
               isDesktop
               hostName
+              userName
+              timeZone
+              defaultLocale
               theme16
               ;
           };
-          home-manager.users.vitor = {
+          home-manager.users.${userName} = {
             imports = [
               ./modules/home/home.nix
             ]
@@ -149,7 +161,7 @@
             ++ lib.optional (builtins.pathExists hostHome) hostHome
             ++ [
               {
-                home.packages = dev.extraPackages;
+                home.packages = dev.extraPackages ++ [ inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default ];
               }
             ];
           };
@@ -166,12 +178,17 @@
           theme16
           ;
       };
+
+      hostEntries = builtins.readDir ./hosts;
+      hostNames = lib.filter (
+        name:
+        hostEntries.${name} == "directory"
+        && name != "common"
+        && builtins.pathExists ./hosts/${name}/meta.nix
+      ) (builtins.attrNames hostEntries);
     in
     {
-      nixosConfigurations = {
-        gh0stk = mkHost "gh0stk";
-        slime = mkHost "slime";
-      };
+      nixosConfigurations = lib.genAttrs hostNames mkHost;
 
       devShells."${system}" =
         let

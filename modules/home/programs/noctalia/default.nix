@@ -8,61 +8,47 @@
 let
   homeDir = config.home.homeDirectory;
   font = config.stylix.fonts.monospace;
+  colors = import ./colors.nix { inherit config; };
 in
 {
+  xdg.configFile = {
+    "noctalia/plugins/calibre-provider" = {
+      source = ./local-plugins/calibre-provider;
+      recursive = true;
+      force = true;
+    };
+    "noctalia/plugins/niri-overview-launcher" = {
+      source = ./local-plugins/niri-overview-launcher;
+      recursive = true;
+      force = true;
+    };
+    "noctalia/plugins/mpris-lyric" = {
+      source = ./local-plugins/mpris-lyric;
+      recursive = true;
+      force = true;
+    };
+    "noctalia/plugins/mpris-lyric/settings.json".text = builtins.toJSON {
+      playerName = "YouTube Music Desktop App, musicfox";
+      updateInterval = 200;
+      width = 300;
+      hideWhenInactive = false;
+    };
+    "noctalia/plugins/screen-recorder" = {
+      source = ./local-plugins/screen-recorder;
+      recursive = true;
+      force = true;
+    };
+    "noctalia/plugins/workspace-overview" = {
+      source = ./local-plugins/workspace-overview;
+      recursive = true;
+      force = true;
+    };
+  };
+
   programs.noctalia-shell = with config.lib.stylix.colors.withHashtag; {
     enable = true;
 
-    colors = {
-      mError = "${base08}";
-      mHover = "${base0C}";
-      mOnError = "${base00}";
-      mOnPrimary = "${base00}";
-      mOnSecondary = "${base00}";
-      mOnSurface = "${base05}";
-      mOnSurfaceVariant = "${base04}";
-      mOnTertiary = "${base0C}";
-      mOutline = "${base02}";
-      mPrimary = "${base0E}";
-      mSecondary = "${base0A}";
-      mShadow = "${base00}";
-      mSurface = "${base00}";
-      mSurfaceVariant = "${base01}";
-      mTertiary = "${base0D}";
-    };
-
-    plugins = {
-      sources = [
-        {
-          enabled = true;
-          name = "Noctalia Plugins";
-          url = "https://github.com/noctalia-dev/noctalia-plugins";
-        }
-      ];
-      states = {
-        assistant-panel = {
-          enabled = true;
-          sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
-        };
-        calibre-provider = {
-          enabled = true;
-          sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
-        };
-        pomodoro = {
-          enabled = true;
-          sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
-        };
-        screen-recorder = {
-          enabled = true;
-          sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
-        };
-        todo = {
-          enabled = true;
-          sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
-        };
-      };
-      version = 2;
-    };
+    colors = colors;
 
     settings = {
       appLauncher = {
@@ -72,19 +58,19 @@ in
         clipboardWrapText = true;
         customLaunchPrefix = "";
         customLaunchPrefixEnabled = false;
-        density = "default";
+        density = "compact";
         enableClipPreview = false;
         enableClipboardHistory = true;
         enableSessionSearch = true;
         enableSettingsSearch = true;
         enableWindowsSearch = true;
-        iconMode = "tabler";
+        iconMode = "native";
         ignoreMouseInput = true;
         overviewLayer = false;
         pinnedApps = [ ];
         position = "follow_bar";
         screenshotAnnotationTool = "";
-        showCategories = true;
+        showCategories = false;
         showIconBackground = false;
         sortByMostUsed = true;
         terminalCommand = "";
@@ -104,32 +90,32 @@ in
       bar = {
         autoHideDelay = 500;
         autoShowDelay = 150;
-        backgroundOpacity = 0.93;
+        backgroundOpacity = 0;
         barType = "floating";
         capsuleColorKey = "none";
-        capsuleOpacity = 0.5;
-        contentPadding = 2;
-        density = "comfortable";
+        capsuleOpacity = 0.68;
+        contentPadding = 16;
+        density = "spacious";
         displayMode = "always_visible";
         floating = true;
-        fontScale = 1;
-        frameRadius = 12;
-        frameThickness = 8;
+        fontScale = 1.06;
+        frameRadius = 18;
+        frameThickness = 0;
         hideOnOverview = true;
-        marginHorizontal = 4;
-        marginVertical = 4;
+        marginHorizontal = 10;
+        marginVertical = 8;
         monitors = [ ];
         mouseWheelAction = "none";
         mouseWheelWrap = true;
         outerCorners = false;
-        position = "left";
+        position = "top";
         reverseScroll = false;
         screenOverrides = [ ];
         showCapsule = true;
         showOnWorkspaceSwitch = true;
         showOutline = false;
-        useSeparateOpacity = false;
-        widgetSpacing = 6;
+        useSeparateOpacity = true;
+        widgetSpacing = 12;
         widgets = {
           center = [
             {
@@ -145,7 +131,7 @@ in
               id = "Workspace";
               labelMode = "index";
               occupiedColor = "secondary";
-              pillSize = 0.6;
+              pillSize = 0.7;
               showApplications = false;
               showBadge = true;
               showLabelsOnlyWhenOccupied = true;
@@ -153,15 +139,6 @@ in
             }
           ];
           left = [
-            {
-              clockColor = "none";
-              customFont = "";
-              formatHorizontal = "HH:mm ddd, MMM dd";
-              formatVertical = "HH mm - dd MM";
-              id = "Clock";
-              tooltipFormat = "HH:mm ddd, MMM dd";
-              useCustomFont = false;
-            }
             {
               compactMode = true;
               diskPath = "/";
@@ -183,51 +160,47 @@ in
               useMonospaceFont = true;
               usePadding = false;
             }
+            {
+              colorName = "primary";
+              hideWhenIdle = false;
+              id = "AudioVisualizer";
+              width = 200;
+            }
           ];
           right = [
             {
-              blacklist = [ ];
-              chevronColor = "none";
-              colorizeIcons = false;
-              drawerEnabled = true;
-              hidePassive = false;
-              id = "Tray";
-              pinned = [ ];
-            }
-            {
-              defaultSettings = {
-                autoStartBreaks = false;
-                autoStartWork = false;
-                longBreakDuration = 15;
-                sessionsBeforeLongBreak = 4;
-                shortBreakDuration = 5;
-                workDuration = 25;
+              colorizeSystemIcon = "primary";
+              enableColorization = true;
+              generalTooltipText = "Windows RDP";
+              hideMode = "alwaysExpanded";
+              icon = "brand-windows-filled";
+              id = "CustomButton";
+              ipcIdentifier = "windows-rdp";
+              leftClickExec = "xfreerdp3 /v:185.222.66.116:33934 /u:manager15 /p:\"Rdv56188202U\" /size:2560x1080 /cert:ignore /f";
+              leftClickUpdateText = false;
+              maxTextLength = {
+                horizontal = 10;
+                vertical = 10;
               };
-              id = "plugin:pomodoro";
-            }
-            {
-              defaultSettings = {
-                completedCount = 0;
-                count = 0;
-                current_page_id = 0;
-                isExpanded = false;
-                pages = [
-                  {
-                    id = 0;
-                    name = "General";
-                  }
-                ];
-                priorityColors = {
-                  high = "#f44336";
-                  low = "#9e9e9e";
-                  medium = "#2196f3";
-                };
-                showBackground = true;
-                showCompleted = true;
-                todos = [ ];
-                useCustomColors = false;
-              };
-              id = "plugin:todo";
+              middleClickExec = "";
+              middleClickUpdateText = false;
+              parseJson = false;
+              rightClickExec = "";
+              rightClickUpdateText = false;
+              showExecTooltip = true;
+              showIcon = true;
+              showTextTooltip = true;
+              textCollapse = "";
+              textCommand = "";
+              textIntervalMs = 3000;
+              textStream = false;
+              wheelDownExec = "";
+              wheelDownUpdateText = false;
+              wheelExec = "";
+              wheelMode = "unified";
+              wheelUpdateText = false;
+              wheelUpExec = "";
+              wheelUpUpdateText = false;
             }
             {
               defaultSettings = {
@@ -249,49 +222,12 @@ in
               id = "plugin:screen-recorder";
             }
             {
-              defaultSettings = {
-                ai = {
-                  apiKeys = { };
-                  maxHistoryLength = 100;
-                  model = "gemini-2.5-flash";
-                  openaiBaseUrl = "https://api.openai.com/v1/chat/completions";
-                  openaiLocal = false;
-                  provider = "google";
-                  systemPrompt = "You are a helpful assistant integrated into a Linux desktop shell. Be concise and helpful.";
-                  temperature = 0.7;
-                };
-                maxHistoryLength = 100;
-                panelDetached = true;
-                panelHeightRatio = 0.85;
-                panelPosition = "right";
-                panelWidth = 520;
-                scale = 1;
-                translator = {
-                  backend = "google";
-                  deeplApiKey = "";
-                  realTimeTranslation = true;
-                  sourceLanguage = "auto";
-                  targetLanguage = "en";
-                };
-              };
-              id = "plugin:assistant-panel";
-            }
-            {
               hideWhenZero = false;
               hideWhenZeroUnread = false;
               iconColor = "none";
               id = "NotificationHistory";
               showUnreadBadge = true;
               unreadBadgeColor = "primary";
-            }
-            {
-              deviceNativePath = "__default__";
-              displayMode = "graphic-clean";
-              hideIfIdle = false;
-              hideIfNotDetected = true;
-              id = "Battery";
-              showNoctaliaPerformance = false;
-              showPowerProfiles = false;
             }
             {
               displayMode = "onhover";
@@ -301,20 +237,26 @@ in
               textColor = "none";
             }
             {
-              applyToAllMonitors = false;
               displayMode = "onhover";
               iconColor = "none";
-              id = "Brightness";
+              id = "Bluetooth";
               textColor = "none";
             }
             {
-              colorizeDistroLogo = false;
-              colorizeSystemIcon = "none";
-              customIconPath = "";
-              enableColorization = false;
-              icon = "noctalia";
-              id = "ControlCenter";
-              useDistroLogo = true;
+              displayMode = "forceOpen";
+              iconColor = "none";
+              id = "KeyboardLayout";
+              showIcon = false;
+              textColor = "none";
+            }
+            {
+              clockColor = "none";
+              customFont = "";
+              formatHorizontal = "HH:mm ddd, MMM dd";
+              formatVertical = "HH mm - dd MM";
+              id = "Clock";
+              tooltipFormat = "HH:mm ddd, MMM dd";
+              useCustomFont = false;
             }
           ];
         };
@@ -347,7 +289,7 @@ in
         manualSunrise = "06:30";
         manualSunset = "18:30";
         monitorForColors = "";
-        predefinedScheme = "Noctalia (default)";
+        predefinedScheme = "Catppuccin";
         schedulingMode = "off";
         useWallpaperColors = false;
       };
@@ -432,34 +374,6 @@ in
                 y = 150;
               }
               {
-                defaultSettings = {
-                  completedCount = 0;
-                  count = 0;
-                  current_page_id = 0;
-                  isExpanded = false;
-                  pages = [
-                    {
-                      id = 0;
-                      name = "General";
-                    }
-                  ];
-                  priorityColors = {
-                    high = "#f44336";
-                    low = "#9e9e9e";
-                    medium = "#2196f3";
-                  };
-                  showBackground = true;
-                  showCompleted = true;
-                  todos = [ ];
-                  useCustomColors = false;
-                };
-                id = "plugin:todo";
-                scale = 1;
-                showBackground = true;
-                x = 1110;
-                y = 450;
-              }
-              {
                 hideMode = "visible";
                 id = "MediaPlayer";
                 roundedCorners = true;
@@ -479,12 +393,12 @@ in
       };
       dock = {
         animationSpeed = 1;
-        backgroundOpacity = 1;
+        backgroundOpacity = 0;
         colorizeIcons = false;
         deadOpacity = 0.6;
         displayMode = "auto_hide";
         dockType = "static";
-        enabled = true;
+        enabled = false;
         floatingRatio = 1;
         groupApps = true;
         groupClickAction = "list";
@@ -499,9 +413,7 @@ in
         monitors = [ ];
         onlySameOutput = true;
         pinnedApps = [
-          "brave-browser"
           "org.wezfurlong.wezterm"
-          "org.prismlauncher.PrismLauncher"
           "org.telegram.desktop"
         ];
         pinnedStatic = true;
@@ -517,7 +429,7 @@ in
         animationDisabled = false;
         animationSpeed = 1;
         autoStartAuth = false;
-        avatarImage = "/home/vitor/.face";
+        avatarImage = "${homeDir}/.face";
         boxRadiusRatio = 1;
         clockFormat = "hh\nmm";
         clockStyle = "custom";
@@ -540,7 +452,7 @@ in
           keyRight = [ "Right" ];
           keyUp = [ "Up" ];
         };
-        language = "";
+        language = "ru";
         lockOnSuspend = true;
         lockScreenAnimations = false;
         lockScreenBlur = 0;
@@ -591,7 +503,7 @@ in
         firstDayOfWeek = -1;
         hideWeatherCityName = false;
         hideWeatherTimezone = false;
-        name = "Goiânia";
+        name = "Samar, Dnipropetrovsk Oblast, Ukraine";
         showCalendarEvents = true;
         showCalendarWeather = true;
         showWeekNumberInCalendar = false;
@@ -621,7 +533,7 @@ in
         nightTemp = "4000";
       };
       notifications = {
-        backgroundOpacity = 1;
+        backgroundOpacity = 0.78;
         clearDismissed = true;
         criticalUrgencyDuration = 15;
         density = "default";
@@ -644,7 +556,7 @@ in
         sounds = {
           criticalSoundFile = "";
           enabled = false;
-          excludedApps = "discord,firefox,chrome,chromium,edge";
+          excludedApps = "discord,chrome,chromium,edge";
           lowSoundFile = "";
           normalSoundFile = "";
           separateSounds = false;
@@ -653,7 +565,7 @@ in
       };
       osd = {
         autoHideMs = 2000;
-        backgroundOpacity = 1;
+        backgroundOpacity = 0.72;
         enabled = true;
         enabledTypes = [
           0
@@ -757,19 +669,19 @@ in
       };
       ui = {
         boxBorderEnabled = false;
-        fontDefault = "VictorMono NF";
+        fontDefault = "Noto Sans";
         fontDefaultScale = 1;
-        fontFixed = "VictorMono NF";
+        fontFixed = "JetBrainsMono Nerd Font";
         fontFixedScale = 1;
-        panelBackgroundOpacity = 0.7000000000000001;
-        panelsAttachedToBar = true;
-        settingsPanelMode = "attached";
+        panelBackgroundOpacity = 0.98;
+        panelsAttachedToBar = false;
+        settingsPanelMode = "detached";
         settingsPanelSideBarCardStyle = false;
         tooltipsEnabled = true;
       };
       wallpaper = {
         automationEnabled = false;
-        directory = "/home/vitor/nixdots/assets/wallpapers";
+        directory = "${homeDir}/nixdots/assets/wallpapers";
         enableMultiMonitorDirectories = false;
         enabled = true;
         favorites = [ ];

@@ -9,6 +9,7 @@ in
 {
   imports = [
     ./niri
+    ./rofi
     ./stylix
     ./noctalia
     ./wezterm
@@ -17,12 +18,10 @@ in
     ./btop
     ./shell
     # ./starship
-    ./sioyek
   ]
   ++ lib.optionals isDesktop [
     ./fastfetch
     ./cava
     ./lazygit
-    ./vesktop
   ];
 }
