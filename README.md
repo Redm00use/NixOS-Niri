@@ -1,5 +1,7 @@
 # NixOS Niri
 
+[Русская версия](./README.ru.md)
+
 Modern NixOS configuration built around `niri`, `Home Manager`, `Noctalia`, and a portable Python installer for both host generation and full live installation.
 
 ## Preview

@@ -1,5 +1,7 @@
 # NixOS Niri
 
+[English version](./README.md)
+
 Современный конфиг `NixOS` на базе `niri`, `Home Manager`, `Noctalia` и переносимого Python-инсталлера для генерации host-конфигов и полной live-установки.
 
 ## Превью
