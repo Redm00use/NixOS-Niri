@@ -59,7 +59,7 @@ nixpkgs.lib.nixosSystem {
     inputs.nix-flatpak.nixosModules.nix-flatpak
     home-manager.nixosModules.home-manager
     (sharedHomeManager {
-      inherit role hostName userName theme16;
+      inherit role hostName userName timeZone defaultLocale theme16;
     })
   ];
 }
