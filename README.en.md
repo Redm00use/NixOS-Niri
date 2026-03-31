@@ -94,6 +94,14 @@
 
 ## 📦 Installation
 
+> [!IMPORTANT]
+> Before running the installer, make sure `python3` is installed on the system.
+>
+> On a NixOS live environment, you can quickly get it with:
+> ```bash
+> nix-shell -p python3
+> ```
+
 ### Interactive mode
 
 ```bash
