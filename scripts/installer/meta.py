@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 import shutil
 from pathlib import Path
 
@@ -21,6 +22,16 @@ def ensure_host_files_for(host_name: str) -> tuple[Path, Path, Path]:
     if not target_hardware.exists():
         shutil.copy2(TEMPLATE_HOST_DIR / "hardware-configuration.nix", target_hardware)
     return target_host_dir, target_default, target_hardware
+
+
+def backup_host_dir(host_name: str) -> Path | None:
+    target_host_dir, _, _ = host_paths(host_name)
+    if not target_host_dir.exists():
+        return None
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    backup_dir = target_host_dir.parent / f"{host_name}.backup-{timestamp}"
+    shutil.copytree(target_host_dir, backup_dir)
+    return backup_dir
 
 
 def write_meta(
@@ -66,3 +77,19 @@ def write_meta(
         encoding="utf-8",
     )
 
+
+def export_answers(path: Path, data: dict) -> None:
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def import_answers(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def backup_file(path: Path) -> Path | None:
+    if not path.exists():
+        return None
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    backup_path = path.with_name(f"{path.name}.backup-{timestamp}")
+    shutil.copy2(path, backup_path)
+    return backup_path

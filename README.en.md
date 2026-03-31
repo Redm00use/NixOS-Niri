@@ -100,6 +100,14 @@
 python3 ./scripts/install.py
 ```
 
+Installer now supports presets:
+
+- `desktop-amd`
+- `desktop-nvidia`
+- `desktop-intel`
+- `server`
+- `custom`
+
 ### Full live installation
 
 ```bash
@@ -123,6 +131,19 @@ sudo python3 ./scripts/install.py \
   --yes
 ```
 
+### Dry-run
+
+```bash
+sudo python3 ./scripts/install.py --mode live --host test --user me --gpu amd --fs btrfs --disk /dev/nvme0n1 --dry-run
+```
+
+### Export / import installer answers
+
+```bash
+python3 ./scripts/install.py --export-json install-profile.json
+python3 ./scripts/install.py --import-json install-profile.json
+```
+
 ### What the installer can do
 
 1. Create a new host under `hosts/<hostName>`
@@ -134,6 +155,12 @@ sudo python3 ./scripts/install.py \
 7. Optionally enable `LUKS`
 8. Create `btrfs` subvolumes
 9. Save `PARTUUID` / `UUID` for runtime storage config
+10. Create a backup of an existing `hosts/<hostName>` before overwrite
+11. Show an install plan and check required tools before starting
+12. Support presets and quick timezone / locale selection through menus
+13. Write install logs to `.installer-logs/`
+14. Export / import answers to `json`
+15. Clean up mounts / swap on install failure
 
 ### Apply an existing host config
 

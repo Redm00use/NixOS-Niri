@@ -10,12 +10,38 @@ from .common import CRYPT_NAME, REPO_ROOT, blkid_value, partition_suffix, run, s
 
 def prompt_disk() -> str:
     print("\nДоступные диски:")
-    run(["lsblk", "-d", "-o", "NAME,SIZE,MODEL"], check=False)
+    run(["lsblk", "-d", "-e", "7,11", "-o", "NAME,SIZE,MODEL,TRAN"])
     disk = input("Укажи диск для установки, например /dev/nvme0n1: ").strip()
     if not disk.startswith("/dev/"):
         print("Ошибка: укажи путь вида /dev/sdX или /dev/nvme0n1")
         sys.exit(1)
     return disk
+
+
+def confirm_disk_name(disk: str) -> None:
+    print("\nТекущая разметка дисков:")
+    run(["lsblk", "-o", "NAME,SIZE,FSTYPE,TYPE,MOUNTPOINTS"])
+    answer = input(f"Для подтверждения введи точное имя диска [{disk}]: ").strip()
+    if answer != disk:
+        print("Ошибка: имя диска не совпало. Отменено.")
+        sys.exit(1)
+
+
+def preflight_checks() -> None:
+    required = [
+        "lsblk",
+        "parted",
+        "mkfs.fat",
+        "mount",
+        "umount",
+        "nixos-generate-config",
+        "nixos-install",
+        "blkid",
+    ]
+    missing = [cmd for cmd in required if shutil.which(cmd) is None]
+    if missing:
+        print(f"Ошибка: отсутствуют команды: {', '.join(missing)}")
+        sys.exit(1)
 
 
 def require_root() -> None:
@@ -118,6 +144,35 @@ def install_system(host_name: str) -> None:
     run(["nixos-install", "--flake", f"{target_repo}#{host_name}"])
 
 
+def cleanup_mounts() -> None:
+    for mountpoint in ["/mnt/home", "/mnt/boot", "/mnt"]:
+        try:
+            run(["umount", mountpoint], check=False)
+        except Exception:
+            pass
+    run(["swapoff", "-a"], check=False)
+
+
+def describe_plan(
+    disk: str,
+    filesystem: str,
+    separate_home: bool,
+    home_size_gib: int,
+    swap_size_gib: int,
+    luks_enabled: bool,
+) -> list[str]:
+    lines = [
+        f"Disk: {disk}",
+        f"Root FS: {filesystem}",
+        f"Separate /home: {'yes' if separate_home else 'no'}",
+        f"Swap: {swap_size_gib} GiB",
+        f"LUKS: {'yes' if luks_enabled else 'no'}",
+    ]
+    if separate_home:
+        lines.append(f"Home size: {home_size_gib} GiB")
+    return lines
+
+
 def capture_layout_ids(disk: str, separate_home: bool, swap_size_gib: int, luks_enabled: bool) -> tuple[str | None, str | None]:
     current_partition = 2
     swap_partition = partition_suffix(disk, current_partition) if swap_size_gib > 0 else None
@@ -129,4 +184,3 @@ def capture_layout_ids(disk: str, separate_home: bool, swap_size_gib: int, luks_
     luks_part_uuid = blkid_value(root_partition, "PARTUUID") if luks_enabled else None
     swap_uuid = blkid_value(swap_partition, "UUID") if swap_partition is not None else None
     return luks_part_uuid, swap_uuid
-

@@ -100,6 +100,14 @@
 python3 ./scripts/install.py
 ```
 
+Installer теперь умеет presets:
+
+- `desktop-amd`
+- `desktop-nvidia`
+- `desktop-intel`
+- `server`
+- `custom`
+
 ### Полная live-установка
 
 ```bash
@@ -123,6 +131,19 @@ sudo python3 ./scripts/install.py \
   --yes
 ```
 
+### Dry-run
+
+```bash
+sudo python3 ./scripts/install.py --mode live --host test --user me --gpu amd --fs btrfs --disk /dev/nvme0n1 --dry-run
+```
+
+### Export / import installer answers
+
+```bash
+python3 ./scripts/install.py --export-json install-profile.json
+python3 ./scripts/install.py --import-json install-profile.json
+```
+
 ### Что умеет installer
 
 1. Создаёт новый host в `hosts/<hostName>`
@@ -134,6 +155,12 @@ sudo python3 ./scripts/install.py \
 7. Опционально включает `LUKS`
 8. Создаёт `btrfs` subvolumes
 9. Сохраняет `PARTUUID` / `UUID` для runtime storage-конфига
+10. Делает backup существующего `hosts/<hostName>` перед перезаписью
+11. Показывает план установки и проверяет необходимые утилиты до старта
+12. Поддерживает presets и быстрый выбор timezone / locale через меню
+13. Пишет лог установки в `.installer-logs/`
+14. Умеет экспорт / импорт ответов в `json`
+15. Делает cleanup mount / swap при ошибке установки
 
 ### Применение существующего host-конфига
 

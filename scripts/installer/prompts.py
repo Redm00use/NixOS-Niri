@@ -7,6 +7,23 @@ import sys
 GPU_CHOICES = {"1": ("AMD", "amd"), "2": ("NVIDIA", "nvidia"), "3": ("Intel", "intel")}
 FILESYSTEM_CHOICES = {"1": ("btrfs", "btrfs"), "2": ("ext4", "ext4")}
 ROLE_CHOICES = {"1": ("desktop", "desktop"), "2": ("server", "server")}
+TIMEZONE_CHOICES = {
+    "1": ("Europe/Kyiv", "Europe/Kyiv"),
+    "2": ("Europe/Moscow", "Europe/Moscow"),
+    "3": ("UTC", "UTC"),
+}
+LOCALE_CHOICES = {
+    "1": ("ru_RU.UTF-8", "ru_RU.UTF-8"),
+    "2": ("en_US.UTF-8", "en_US.UTF-8"),
+    "3": ("uk_UA.UTF-8", "uk_UA.UTF-8"),
+}
+PRESET_CHOICES = {
+    "1": ("desktop-amd", "desktop-amd"),
+    "2": ("desktop-nvidia", "desktop-nvidia"),
+    "3": ("desktop-intel", "desktop-intel"),
+    "4": ("server", "server"),
+    "5": ("custom", "custom"),
+}
 
 
 def print_header(title: str, step: str | None = None) -> None:
@@ -60,6 +77,18 @@ def choose_gpu() -> str:
 
 def choose_filesystem() -> str:
     return choose_from_menu("Файловая система root", [("1", "btrfs"), ("2", "ext4")], "1")
+
+
+def choose_timezone() -> str:
+    return choose_from_menu("Часовой пояс", [(key, value) for key, (_, value) in TIMEZONE_CHOICES.items()], "1")
+
+
+def choose_locale() -> str:
+    return choose_from_menu("Locale", [(key, value) for key, (_, value) in LOCALE_CHOICES.items()], "1")
+
+
+def choose_preset() -> str:
+    return choose_from_menu("Preset конфигурации", [(key, value) for key, (_, value) in PRESET_CHOICES.items()], "5")
 
 
 def choose_yes_no(label: str, default: bool = False) -> bool:
