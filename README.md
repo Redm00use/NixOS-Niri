@@ -1,88 +1,112 @@
-# NixOS Niri
+<div align="center">
+	<img src="./assets/previews/preview-main.png" width="900px">
+	<h1>NixOS Niri</h1>
+	<p>Конфиг NixOS на базе <b>niri</b>, <b>Noctalia</b>, <b>Home Manager</b> и переносимого <b>Python Installer</b>.</p>
+	<a href="./README.md">
+		<img src="https://img.shields.io/badge/README-RU-cba6f7?style=for-the-badge&labelColor=1C2325">
+	</a>
+	<a href="./README.en.md">
+		<img src="https://img.shields.io/badge/README-ENG-89b4fa?style=for-the-badge&labelColor=1C2325">
+	</a>
+</div>
 
-[English version](./README.en.md)
+***
 
-`NixOS` • `niri` • `Home Manager` • `Noctalia` • `Python Installer`
+<table align="right">
+	<tr>
+		<td colspan="2" align="center">Системные параметры</td>
+	</tr>
+	<tr>
+		<th>Компонент</th>
+		<th>Значение</th>
+	</tr>
+	<tr>
+		<td>OS</td>
+		<td>NixOS 25.11</td>
+	</tr>
+	<tr>
+		<td>WM</td>
+		<td>niri</td>
+	</tr>
+	<tr>
+		<td>Shell</td>
+		<td>zsh</td>
+	</tr>
+	<tr>
+		<td>Terminal</td>
+		<td>wezterm</td>
+	</tr>
+	<tr>
+		<td>Panel</td>
+		<td>Noctalia</td>
+	</tr>
+	<tr>
+		<td>Browser</td>
+		<td>Zen Browser</td>
+	</tr>
+	<tr>
+		<td>File Manager</td>
+		<td>Nautilus</td>
+	</tr>
+	<tr>
+		<td>Editor</td>
+		<td>Zed / Neovim</td>
+	</tr>
+	<tr>
+		<td>Audio</td>
+		<td>PipeWire</td>
+	</tr>
+	<tr>
+		<td>Bootloader</td>
+		<td>systemd-boot</td>
+	</tr>
+	<tr>
+		<td>Theming</td>
+		<td>Stylix</td>
+	</tr>
+	<tr>
+		<td>Installer</td>
+		<td>Python TUI</td>
+	</tr>
+</table>
 
-Современный конфиг `NixOS` на базе `niri`, `Home Manager`, `Noctalia` и переносимого Python-инсталлера для генерации host-конфигов и полной live-установки.
+<div align="left">
+	<h3>📝 О проекте</h3>
+	<p>
+	Это переносимый конфиг <b>NixOS</b> для рабочего окружения на <b>niri</b> с интеграцией <b>Home Manager</b>, <b>Noctalia</b>, динамическими host-конфигами и встроенным Python-инсталлером.
+	</p>
+	<h3>🚀 Возможности</h3>
+	<p>
+	• Рабочее окружение на <b>niri</b> под Wayland<br>
+	• Лаунчер, clipboard, wallpaper и session menu через <b>Noctalia</b><br>
+	• Динамические flake-host'ы через <code>hosts/&lt;hostName&gt;</code><br>
+	• Пошаговый Python installer для генерации host-конфига и live-установки<br>
+	• Выбор GPU: <b>AMD</b>, <b>NVIDIA</b>, <b>Intel</b><br>
+	• Поддержка <b>LUKS</b>, swap, отдельного <code>/home</code>, <b>btrfs</b> subvolumes<br>
+	• Non-interactive режим для автоматизации установки<br>
+	</p>
+</div>
 
-## Превью
+> [!WARNING]
+> Live-режим инсталлера полностью стирает выбранный диск.
+> Перед установкой обязательно проверь правильность диска, схемы разделов и параметров `LUKS` / `swap` / `/home`.
+> Для другого ПК нужно пересоздавать `hardware-configuration.nix` под конкретное железо.
 
-![Превью](./assets/previews/preview-main.png)
+## 📦 Установка
 
-## Что есть
-
-- рабочее окружение на `niri`
-- `Noctalia` для лаунчера, буфера обмена, обоев и power menu
-- динамические flake-host'ы из `hosts/<hostName>`
-- встроенный Python installer с пошаговым TUI
-- полноценная live-установка NixOS
-- выбор GPU: `AMD`, `NVIDIA`, `Intel`
-- опциональные `LUKS`, swap, отдельный `/home`, `btrfs` subvolumes
-- non-interactive режим для автоматизации
-
-## Основной стек
-
-- **WM** — `niri`
-- **Shell** — `zsh`
-- **Terminal** — `wezterm`
-- **Panel / Launcher** — `Noctalia`
-- **Browser** — `Zen Browser`
-- **File Manager** — `Nautilus`
-- **Editor** — `Zed` / `Neovim`
-
-## Реальные хоткеи
-
-`Mod` — это клавиша `Super`.
-
-| Комбинация | Действие |
-| --- | --- |
-| `Mod+Return` | Открыть `wezterm` |
-| `Mod+A` | Открыть / закрыть лаунчер Noctalia |
-| `Mod+V` | Открыть менеджер буфера обмена |
-| `Mod+W` | Открыть / закрыть меню обоев |
-| `Mod+X` | Открыть / закрыть меню сессии / питания |
-| `Mod+Z` | Запустить Zen Browser |
-| `Mod+E` | Открыть Nautilus |
-| `Mod+C` | Открыть Zed |
-| `Mod+T` | Открыть Telegram |
-| `Mod+Q` | Закрыть текущее окно |
-| `Mod+Space` | Переключить floating mode |
-| `Mod+O` | Переключить overview |
-| `Mod+F` | Развернуть колонку |
-| `Mod+Shift+F` | Полный экран |
-| `Mod+1..9` | Переключение на workspace 1..9 |
-| `Mod+Shift+1..9` | Перенести колонку в workspace 1..9 |
-| `Mod+H / J / K / L` | Навигация по окнам / колонкам |
-| `Mod+Ctrl+H / J / K / L` | Перемещение колонок / окон |
-| `Mod+Shift+H / J / K / L` | Переключение между мониторами |
-| `Mod+Shift+Ctrl+H / J / K / L` | Перенос колонки на другой монитор |
-| `Mod+R` | Переключить preset ширины колонки |
-| `Mod+Shift+R` | Переключить preset высоты окна |
-| `Mod+=` / `Mod+-` | Изменить ширину колонки |
-| `Mod+Shift+=` / `Mod+Shift+-` | Изменить высоту окна |
-| `Mod+Alt+Shift+4` | Скриншот |
-| `Mod+Shift+Slash` | Показать overlay с хоткеями |
-| `Mod+Shift+P` | Выключить мониторы |
-| `Ctrl+Alt+Delete` | Выйти из `niri` |
-| `Mod+Shift+E` | Выйти из `niri` |
-| `Scroll_Lock` | Переключить helper для scroll lock |
-
-## Установщик
-
-Интерактивный режим:
+### Интерактивный режим
 
 ```bash
 python3 ./scripts/install.py
 ```
 
-Live-установка:
+### Полная live-установка
 
 ```bash
 sudo python3 ./scripts/install.py
 ```
 
-Пример non-interactive установки:
+### Пример non-interactive установки
 
 ```bash
 sudo python3 ./scripts/install.py \
@@ -99,25 +123,59 @@ sudo python3 ./scripts/install.py \
   --yes
 ```
 
-## Что умеет installer
+### Что умеет installer
 
-- создать новый host в `hosts/<hostName>`
-- сгенерировать `meta.nix`
-- разметить и отформатировать диск
-- настроить `EFI + root`
-- опционально создать `swap`
-- опционально создать отдельный `/home`
-- опционально включить `LUKS`
-- создать `btrfs` subvolumes
-- сохранить `PARTUUID` / `UUID` для runtime storage-конфига
+1. Создаёт новый host в `hosts/<hostName>`
+2. Генерирует `meta.nix`
+3. Размечает и форматирует диск в live-режиме
+4. Настраивает `EFI + root`
+5. Опционально создаёт `swap`
+6. Опционально создаёт отдельный `/home`
+7. Опционально включает `LUKS`
+8. Создаёт `btrfs` subvolumes
+9. Сохраняет `PARTUUID` / `UUID` для runtime storage-конфига
 
-## Применение конфига
+### Применение существующего host-конфига
 
 ```bash
 sudo nixos-rebuild switch --flake .#<hostName>
 ```
 
-## Структура проекта
+## ⌨️ Реальные хоткеи
+
+`Mod` — это клавиша `Super`.
+
+| Действие | Комбинация |
+| --- | --- |
+| Открыть терминал | `Mod+Return` |
+| Открыть / закрыть лаунчер | `Mod+A` |
+| Открыть clipboard menu | `Mod+V` |
+| Открыть / закрыть меню обоев | `Mod+W` |
+| Открыть / закрыть session menu | `Mod+X` |
+| Запустить Zen Browser | `Mod+Z` |
+| Открыть Nautilus | `Mod+E` |
+| Открыть Zed | `Mod+C` |
+| Открыть Telegram | `Mod+T` |
+| Закрыть окно | `Mod+Q` |
+| Переключить floating mode | `Mod+Space` |
+| Переключить overview | `Mod+O` |
+| Развернуть колонку | `Mod+F` |
+| Полный экран | `Mod+Shift+F` |
+| Workspace 1..9 | `Mod+1..9` |
+| Перенос в workspace 1..9 | `Mod+Shift+1..9` |
+| Навигация по окнам/колонкам | `Mod+H / J / K / L` |
+| Перемещение колонок/окон | `Mod+Ctrl+H / J / K / L` |
+| Навигация по мониторам | `Mod+Shift+H / J / K / L` |
+| Перенос колонки на монитор | `Mod+Shift+Ctrl+H / J / K / L` |
+| Изменить ширину колонки | `Mod+=` / `Mod+-` |
+| Изменить высоту окна | `Mod+Shift+=` / `Mod+Shift+-` |
+| Скриншот | `Mod+Alt+Shift+4` |
+| Overlay с хоткеями | `Mod+Shift+Slash` |
+| Выключить мониторы | `Mod+Shift+P` |
+| Выйти из `niri` | `Ctrl+Alt+Delete` / `Mod+Shift+E` |
+| Scroll Lock helper | `Scroll_Lock` |
+
+## 🗂️ Структура проекта
 
 - `flake.nix` — flake entry и автоматическое обнаружение host'ов
 - `lib/mkHost.nix` — сборка host-конфига из metadata
@@ -127,7 +185,7 @@ sudo nixos-rebuild switch --flake .#<hostName>
 - `scripts/install.py` — точка входа installer'а
 - `scripts/installer` — модульная реализация installer'а
 
-## Примечания
+## 📝 Примечания
 
 - `meta.nix` хранит `hostName`, `userName`, `gpuType`, `role`, `timeZone`, `defaultLocale` и storage-метаданные
 - runtime storage-логика расширяется через `modules/system/profiles/storage/default.nix`
