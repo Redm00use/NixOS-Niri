@@ -123,6 +123,9 @@ Installer now supports presets:
 sudo python3 ./scripts/install.py
 ```
 
+> [!NOTE]
+> The final `nixos-install` stage can take anywhere from `20` to `40` minutes, especially on the first run, inside a virtual machine, or with a slow internet connection.
+
 ### Example non-interactive install
 
 ```bash

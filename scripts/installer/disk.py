@@ -229,7 +229,7 @@ def install_system(host_name: str) -> None:
         ),
         symlinks=False,
     )
-    print("Сейчас начнётся сборка и установка системы. Это может занять несколько минут.")
+    print("Сейчас начнётся сборка и установка системы. Это может занять от 20 до 40 минут.")
     run_with_spinner(["nixos-install", "--flake", f"{target_repo}#{host_name}"], "Установка NixOS")
 
 
