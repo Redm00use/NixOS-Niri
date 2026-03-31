@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import subprocess
+import threading
+import time
 from pathlib import Path
 import shutil
 from datetime import datetime
@@ -19,6 +21,35 @@ def run(command: list[str], *, check: bool = True) -> None:
     with LOG_FILE.open("a", encoding="utf-8") as log_file:
         log_file.write(f"\n$ {' '.join(command)}\n")
         subprocess.run(command, check=check, stdout=log_file, stderr=log_file)
+
+
+def print_progress(step: int, total: int, title: str) -> None:
+    width = 24
+    filled = int((step / total) * width)
+    bar = "█" * filled + "░" * (width - filled)
+    percent = int((step / total) * 100)
+    print(f"\n[{step}/{total}] {bar} {percent}% — {title}")
+
+
+def run_with_spinner(command: list[str], title: str) -> None:
+    stop = False
+
+    def spinner() -> None:
+        frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+        index = 0
+        while not stop:
+            print(f"\r{frames[index % len(frames)]} {title}...", end="", flush=True)
+            index += 1
+            time.sleep(0.1)
+        print(f"\r✓ {title}...{' ' * 20}")
+
+    thread = threading.Thread(target=spinner, daemon=True)
+    thread.start()
+    try:
+        run(command)
+    finally:
+        stop = True
+        thread.join()
 
 
 def command_exists(name: str) -> bool:

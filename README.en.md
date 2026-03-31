@@ -172,6 +172,7 @@ python3 ./scripts/install.py --import-json install-profile.json
 15. Clean up mounts / swap on install failure
 16. Show disks as a selectable list instead of requiring manual typing
 17. Supports arrow-key disk selection with Enter, with a fallback to the plain list mode
+18. Shows step-based progress and a spinner for long-running operations
 
 ### Apply an existing host config
 

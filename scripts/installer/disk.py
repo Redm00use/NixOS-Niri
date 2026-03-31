@@ -7,7 +7,7 @@ import sys
 import curses
 from pathlib import Path
 
-from .common import CRYPT_NAME, REPO_ROOT, blkid_value, partition_suffix, run, shlex_quote
+from .common import CRYPT_NAME, REPO_ROOT, blkid_value, partition_suffix, run, run_with_spinner, shlex_quote
 
 
 def list_disks() -> list[dict]:
@@ -205,7 +205,7 @@ def format_and_mount(
 
 
 def generate_hardware_config() -> None:
-    run(["nixos-generate-config", "--root", "/mnt"])
+    run_with_spinner(["nixos-generate-config", "--root", "/mnt"], "Генерация hardware-configuration.nix")
 
 
 def copy_hardware_config(target_hardware: Path) -> None:
@@ -229,7 +229,8 @@ def install_system(host_name: str) -> None:
         ),
         symlinks=False,
     )
-    run(["nixos-install", "--flake", f"{target_repo}#{host_name}"])
+    print("Сейчас начнётся сборка и установка системы. Это может занять несколько минут.")
+    run_with_spinner(["nixos-install", "--flake", f"{target_repo}#{host_name}"], "Установка NixOS")
 
 
 def cleanup_mounts() -> None:
