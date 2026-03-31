@@ -216,7 +216,19 @@ def install_system(host_name: str) -> None:
     target_repo = Path("/mnt/etc/nixos/nixdots")
     if target_repo.exists():
         shutil.rmtree(target_repo)
-    shutil.copytree(REPO_ROOT, target_repo)
+    shutil.copytree(
+        REPO_ROOT,
+        target_repo,
+        ignore=shutil.ignore_patterns(
+            ".git",
+            "result",
+            ".installer-logs",
+            "__pycache__",
+            "*.pyc",
+            ".direnv",
+        ),
+        symlinks=False,
+    )
     run(["nixos-install", "--flake", f"{target_repo}#{host_name}"])
 
 
