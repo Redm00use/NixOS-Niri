@@ -1,25 +1,25 @@
 # NixOS Niri
 
-[Русская версия](./README.ru.md)
+[English version](./README.en.md)
 
-Modern NixOS configuration built around `niri`, `Home Manager`, `Noctalia`, and a portable Python installer for both host generation and full live installation.
+Современный конфиг `NixOS` на базе `niri`, `Home Manager`, `Noctalia` и переносимого Python-инсталлера для генерации host-конфигов и полной live-установки.
 
-## Preview
+## Превью
 
-![Preview](./assets/previews/preview-main.png)
+![Превью](./assets/previews/preview-main.png)
 
-## Highlights
+## Что есть
 
-- `niri` Wayland desktop
-- `Noctalia` shell / launcher / clipboard / wallpaper menu
-- dynamic flake hosts from `hosts/<hostName>`
-- built-in Python installer with interactive TUI
-- full live-install flow for NixOS
-- GPU selection: `AMD`, `NVIDIA`, `Intel`
-- optional `LUKS`, swap, separate `/home`, `btrfs` subvolumes
-- non-interactive installer mode for automation
+- рабочее окружение на `niri`
+- `Noctalia` для лаунчера, буфера обмена, обоев и power menu
+- динамические flake-host'ы из `hosts/<hostName>`
+- встроенный Python installer с пошаговым TUI
+- полноценная live-установка NixOS
+- выбор GPU: `AMD`, `NVIDIA`, `Intel`
+- опциональные `LUKS`, swap, отдельный `/home`, `btrfs` subvolumes
+- non-interactive режим для автоматизации
 
-## Stack
+## Основной стек
 
 - **WM** — `niri`
 - **Shell** — `zsh`
@@ -29,58 +29,58 @@ Modern NixOS configuration built around `niri`, `Home Manager`, `Noctalia`, and 
 - **File Manager** — `Nautilus`
 - **Editor** — `Zed` / `Neovim`
 
-## Real Keybinds
+## Реальные хоткеи
 
-`Mod` is the `Super` key.
+`Mod` — это клавиша `Super`.
 
-| Shortcut | Action |
+| Комбинация | Действие |
 | --- | --- |
-| `Mod+Return` | Open `wezterm` |
-| `Mod+A` | Toggle Noctalia launcher |
-| `Mod+V` | Open clipboard menu |
-| `Mod+W` | Toggle wallpaper panel |
-| `Mod+X` | Toggle session / power menu |
-| `Mod+Z` | Launch Zen Browser |
-| `Mod+E` | Open Nautilus |
-| `Mod+C` | Open Zed |
-| `Mod+T` | Open Telegram |
-| `Mod+Q` | Close focused window |
-| `Mod+Space` | Toggle floating mode |
-| `Mod+O` | Toggle overview |
-| `Mod+F` | Maximize column |
-| `Mod+Shift+F` | Fullscreen window |
-| `Mod+1..9` | Focus workspace 1..9 |
-| `Mod+Shift+1..9` | Move column to workspace 1..9 |
-| `Mod+H / J / K / L` | Navigate left / down / up / right |
-| `Mod+Ctrl+H / J / K / L` | Move column / window |
-| `Mod+Shift+H / J / K / L` | Focus monitor |
-| `Mod+Shift+Ctrl+H / J / K / L` | Move column to monitor |
-| `Mod+R` | Switch preset column width |
-| `Mod+Shift+R` | Switch preset window height |
-| `Mod+=` / `Mod+-` | Adjust column width |
-| `Mod+Shift+=` / `Mod+Shift+-` | Adjust window height |
-| `Mod+Alt+Shift+4` | Screenshot |
-| `Mod+Shift+Slash` | Show hotkey overlay |
-| `Mod+Shift+P` | Power off monitors |
-| `Ctrl+Alt+Delete` | Quit niri |
-| `Mod+Shift+E` | Quit niri |
-| `Scroll_Lock` | Toggle scroll lock keyboard helper |
+| `Mod+Return` | Открыть `wezterm` |
+| `Mod+A` | Открыть / закрыть лаунчер Noctalia |
+| `Mod+V` | Открыть менеджер буфера обмена |
+| `Mod+W` | Открыть / закрыть меню обоев |
+| `Mod+X` | Открыть / закрыть меню сессии / питания |
+| `Mod+Z` | Запустить Zen Browser |
+| `Mod+E` | Открыть Nautilus |
+| `Mod+C` | Открыть Zed |
+| `Mod+T` | Открыть Telegram |
+| `Mod+Q` | Закрыть текущее окно |
+| `Mod+Space` | Переключить floating mode |
+| `Mod+O` | Переключить overview |
+| `Mod+F` | Развернуть колонку |
+| `Mod+Shift+F` | Полный экран |
+| `Mod+1..9` | Переключение на workspace 1..9 |
+| `Mod+Shift+1..9` | Перенести колонку в workspace 1..9 |
+| `Mod+H / J / K / L` | Навигация по окнам / колонкам |
+| `Mod+Ctrl+H / J / K / L` | Перемещение колонок / окон |
+| `Mod+Shift+H / J / K / L` | Переключение между мониторами |
+| `Mod+Shift+Ctrl+H / J / K / L` | Перенос колонки на другой монитор |
+| `Mod+R` | Переключить preset ширины колонки |
+| `Mod+Shift+R` | Переключить preset высоты окна |
+| `Mod+=` / `Mod+-` | Изменить ширину колонки |
+| `Mod+Shift+=` / `Mod+Shift+-` | Изменить высоту окна |
+| `Mod+Alt+Shift+4` | Скриншот |
+| `Mod+Shift+Slash` | Показать overlay с хоткеями |
+| `Mod+Shift+P` | Выключить мониторы |
+| `Ctrl+Alt+Delete` | Выйти из `niri` |
+| `Mod+Shift+E` | Выйти из `niri` |
+| `Scroll_Lock` | Переключить helper для scroll lock |
 
-## Installer
+## Установщик
 
-Interactive mode:
+Интерактивный режим:
 
 ```bash
 python3 ./scripts/install.py
 ```
 
-Live install:
+Live-установка:
 
 ```bash
 sudo python3 ./scripts/install.py
 ```
 
-Example non-interactive install:
+Пример non-interactive установки:
 
 ```bash
 sudo python3 ./scripts/install.py \
@@ -97,40 +97,36 @@ sudo python3 ./scripts/install.py \
   --yes
 ```
 
-## What the installer can do
+## Что умеет installer
 
-- create a new host under `hosts/<hostName>`
-- generate `meta.nix`
-- partition and format disk for live install
-- configure `EFI + root`
-- optionally create `swap`
-- optionally create separate `/home`
-- optionally enable `LUKS`
-- create `btrfs` subvolumes when needed
-- capture `PARTUUID` / `UUID` for runtime storage config
+- создать новый host в `hosts/<hostName>`
+- сгенерировать `meta.nix`
+- разметить и отформатировать диск
+- настроить `EFI + root`
+- опционально создать `swap`
+- опционально создать отдельный `/home`
+- опционально включить `LUKS`
+- создать `btrfs` subvolumes
+- сохранить `PARTUUID` / `UUID` для runtime storage-конфига
 
-## Apply Config
+## Применение конфига
 
 ```bash
 sudo nixos-rebuild switch --flake .#<hostName>
 ```
 
-## Project Layout
+## Структура проекта
 
-- `flake.nix` — flake entry and dynamic host discovery
-- `lib/mkHost.nix` — host builder from metadata
-- `hosts/<hostName>` — host-specific files
-- `modules/system` — system configuration
-- `modules/home` — home-manager configuration
-- `scripts/install.py` — installer entrypoint
-- `scripts/installer` — modular installer implementation
+- `flake.nix` — flake entry и автоматическое обнаружение host'ов
+- `lib/mkHost.nix` — сборка host-конфига из metadata
+- `hosts/<hostName>` — host-specific файлы
+- `modules/system` — системные модули
+- `modules/home` — модули Home Manager
+- `scripts/install.py` — точка входа installer'а
+- `scripts/installer` — модульная реализация installer'а
 
-## Notes
+## Примечания
 
-- `meta.nix` stores `hostName`, `userName`, `gpuType`, `role`, `timeZone`, `defaultLocale`, and storage metadata.
-- runtime storage behavior is extended by `modules/system/profiles/storage/default.nix`
-- keyboard layout is `us,ru` with `Caps Lock` switching layouts
-
-## Russian README
-
-- `README.ru.md`
+- `meta.nix` хранит `hostName`, `userName`, `gpuType`, `role`, `timeZone`, `defaultLocale` и storage-метаданные
+- runtime storage-логика расширяется через `modules/system/profiles/storage/default.nix`
+- раскладка клавиатуры — `us,ru`, переключение через `Caps Lock`
