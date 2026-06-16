@@ -8,6 +8,9 @@
 	<a href="./README.en.md">
 		<img src="https://img.shields.io/badge/README-ENG-89b4fa?style=for-the-badge&labelColor=1C2325">
 	</a>
+	<a href="./.github/workflows/ci.yml">
+		<img src="https://img.shields.io/github/actions/workflow/status/Redm00se/NixOS-Niri/ci.yml?branch=main&label=CI&style=for-the-badge&color=a6e3a1&labelColor=1C2325">
+	</a>
 </div>
 
 ***

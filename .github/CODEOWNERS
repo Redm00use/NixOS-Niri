@@ -1,0 +1,33 @@
+# This file defines who owns the files in this repository.
+# It is used by GitHub to automatically request review from the
+# appropriate people when a pull request modifies certain files.
+
+# Default owner for everything
+* @Redm00se
+
+# GitHub Actions workflows
+.github/ @Redm00se
+
+# Nix flake entry points
+/flake.nix @Redm00se
+/flake.lock @Redm00se
+
+# Builders and library code
+/lib/ @Redm00se
+
+# Host-specific configurations
+/hosts/ @Redm00se
+
+# NixOS system modules
+/modules/system/ @Redm00se
+
+# Home Manager modules
+/modules/home/ @Redm00se
+
+# Python installer
+/scripts/ @Redm00se
+
+# Vendored plugins and resources
+/vendor/ @Redm00se
+/patches/ @Redm00se
+/config/ @Redm00se

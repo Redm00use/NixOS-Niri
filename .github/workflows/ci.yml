@@ -1,0 +1,196 @@
+# CI workflow for NixOS-Niri
+#
+# Builds all NixOS configurations, Home Manager configurations,
+# and dev shells. Runs on push to main/master and on PRs.
+#
+# Required secrets:
+#   CACHIX_AUTH_TOKEN — for pushing to the viitorags cachix cache
+
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  # Fast early-return: validate that the flake evaluates at all
+  check:
+    name: Evaluate flake
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v16
+
+      - name: Use magic Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@v8
+
+      - name: Check flake evaluation
+        run: |
+          nix flake check \
+            --all-systems \
+            --no-build \
+            --accept-flake-config \
+            --option tarball-ttl 0 \
+            --option accept-flake-config true
+        env:
+          NIXPKGS_ALLOW_UNFREE: "1"
+
+  # Build every NixOS host defined in the flake
+  build-nixos:
+    name: Build NixOS [${{ matrix.host }}]
+    needs:
+      - check
+      - discover
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        host: ${{ fromJson(needs.discover.outputs.hosts) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v16
+
+      - name: Use magic Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@v8
+
+      - name: Push to Cachix
+        uses: cachix/cachix-action@v15
+        with:
+          name: viitorags
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+
+      - name: Build NixOS toplevel (${{ matrix.host }})
+        run: |
+          nix build \
+            ".#nixosConfigurations.\"${{ matrix.host }}\".config.system.build.toplevel" \
+            --print-build-logs \
+            --accept-flake-config \
+            --option tarball-ttl 0
+        env:
+          NIXPKGS_ALLOW_UNFREE: "1"
+
+      - name: Report closure size
+        run: |
+          readlink result
+          du -sh result/ 2>/dev/null || true
+
+  # Build Home Manager activation package per host
+  build-home:
+    name: Build Home [${{ matrix.host }}]
+    needs:
+      - check
+      - discover
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        host: ${{ fromJson(needs.discover.outputs.hosts) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v16
+
+      - name: Use magic Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@v8
+
+      - name: Push to Cachix
+        uses: cachix/cachix-action@v15
+        with:
+          name: viitorags
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+
+      - name: Build Home Manager activation (${{ matrix.host }})
+        run: |
+          nix build \
+            ".#nixosConfigurations.\"${{ matrix.host }}\".config.system.build.homeManagerBuild" \
+            --print-build-logs \
+            --accept-flake-config \
+            --option tarball-ttl 0
+        env:
+          NIXPKGS_ALLOW_UNFREE: "1"
+
+  # Build all available dev shells
+  build-devshells:
+    name: Build dev shells
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v16
+
+      - name: Use magic Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@v8
+
+      - name: Push to Cachix
+        uses: cachix/cachix-action@v15
+        with:
+          name: viitorags
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+
+      - name: Build all dev shells
+        run: |
+          # Evaluate available shell names from the flake
+          SHELLS=$(nix eval \
+            ".#devShells.x86_64-linux" \
+            --apply 'builtins.attrNames' \
+            --json 2>/dev/null | jq -r '.[]')
+
+          if [ -z "$SHELLS" ]; then
+            echo "No dev shells found — skipping"
+            exit 0
+          fi
+
+          for shell in $SHELLS; do
+            echo "::group::Building dev shell: $shell"
+            nix build \
+              ".#devShells.x86_64-linux.\"$shell\"" \
+              --print-build-logs \
+              --accept-flake-config \
+              --option tarball-ttl 0
+            echo "::endgroup::"
+          done
+        env:
+          NIXPKGS_ALLOW_UNFREE: "1"
+
+  # Discover hosts dynamically — replicates the logic from flake.nix
+  discover:
+    name: Discover hosts
+    runs-on: ubuntu-latest
+    outputs:
+      hosts: ${{ steps.set-hosts.outputs.hosts }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v16
+
+      - name: Use magic Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@v8
+
+      - name: Discover NixOS hosts
+        id: set-hosts
+        run: |
+          HOSTS=$(nix eval \
+            ".#nixosConfigurations" \
+            --apply 'builtins.attrNames' \
+            --json 2>/dev/null)
+
+          echo "Discovered hosts: $HOSTS"
+          echo "hosts=$HOSTS" >> "$GITHUB_OUTPUT"

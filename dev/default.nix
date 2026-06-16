@@ -47,7 +47,7 @@ in
         php.packages.composer
         laravel
         nodePackages.intelephense
-        (callPackage ../pkgs/php-cs-fixer/package.nix { })
+        (pkgs.callPackage ../pkgs/php-cs-fixer/package.nix { })
         tailwindcss-language-server
         phpactor
         php.packages.php-codesniffer
