@@ -1,0 +1,6 @@
+result
+__pycache__
+*.pyc
+.env
+.installer-logs
+.DS_Store
