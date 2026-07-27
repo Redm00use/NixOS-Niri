@@ -1,13 +1,50 @@
 from __future__ import annotations
 
-import os
-import json
-import shutil
-import sys
 import curses
+import json
+import os
+import shutil
+import subprocess
+import sys
+import time
 from pathlib import Path
 
-from .common import CRYPT_NAME, REPO_ROOT, blkid_value, partition_suffix, run, run_with_spinner, shlex_quote
+from .common import (
+    CRYPT_NAME,
+    REPO_ROOT,
+    blkid_value,
+    partition_suffix,
+    run,
+    run_quiet,
+    run_with_spinner,
+)
+
+
+# Базовые утилиты, без которых live-установка в принципе не сработает.
+BASE_REQUIRED_COMMANDS = [
+    "lsblk",
+    "parted",
+    "partprobe",
+    "udevadm",
+    "wipefs",
+    "blkid",
+    "mkfs.fat",
+    "mount",
+    "umount",
+    "mkswap",
+    "swapon",
+    "swapoff",
+]
+LIVE_REQUIRED_COMMANDS = ["nixos-generate-config", "nixos-install"]
+FS_REQUIRED_COMMANDS = {
+    "btrfs": ["mkfs.btrfs", "btrfs"],
+    "ext4": ["mkfs.ext4"],
+}
+
+
+def subprocess_output(command: list[str]) -> str:
+    completed = subprocess.run(command, capture_output=True, text=True, check=True)
+    return completed.stdout
 
 
 def list_disks() -> list[dict]:
@@ -24,20 +61,21 @@ def list_disks() -> list[dict]:
     return [device for device in payload.get("blockdevices", []) if device.get("type") == "disk"]
 
 
-def subprocess_output(command: list[str]) -> str:
-    import subprocess
-    completed = subprocess.run(command, capture_output=True, text=True, check=True)
-    return completed.stdout
-
-
 def prompt_disk() -> str:
     disks = list_disks()
     if not disks:
         print("Ошибка: не найдено подходящих дисков.")
         sys.exit(1)
 
+    if not sys.stdin.isatty():
+        print("Ошибка: диск не задан, а stdin не является терминалом.")
+        print("Укажи диск явно: --disk /dev/nvme0n1")
+        sys.exit(1)
+
     try:
         return prompt_disk_curses(disks)
+    except SystemExit:
+        raise
     except Exception:
         pass
 
@@ -94,27 +132,38 @@ def prompt_disk_curses(disks: list[dict]) -> str:
     return curses.wrapper(_selector)
 
 
-def confirm_disk_name(disk: str) -> None:
+def confirm_disk_name(disk: str, assume_yes: bool = False) -> None:
     print("\nТекущая разметка дисков:")
-    run(["lsblk", "-o", "NAME,SIZE,FSTYPE,TYPE,MOUNTPOINTS"])
-    answer = input("Подтвердить выбор диска? [y/N]: ").strip().lower()
+    # stream=True: раньше вывод lsblk уходил в лог, и "подтверди выбор" было вслепую.
+    run(["lsblk", "-o", "NAME,SIZE,FSTYPE,TYPE,MOUNTPOINTS"], check=False, stream=True)
+    if assume_yes:
+        print(f"--yes: подтверждение диска {disk} пропущено.")
+        return
+    if not sys.stdin.isatty():
+        print("Ошибка: нужно подтверждение диска, но stdin не терминал. Используй --yes.")
+        sys.exit(1)
+    answer = input(f"Подтвердить выбор диска {disk}? [y/N]: ").strip().lower()
     if answer != "y":
         print("Отменено.")
         sys.exit(1)
 
 
-def preflight_checks() -> None:
-    required = [
-        "lsblk",
-        "parted",
-        "mkfs.fat",
-        "mount",
-        "umount",
-        "nixos-generate-config",
-        "nixos-install",
-        "blkid",
-    ]
-    missing = [cmd for cmd in required if shutil.which(cmd) is None]
+def preflight_checks(mode: str, filesystem: str | None = None, luks_enabled: bool = False) -> None:
+    """Проверить только те утилиты, которые реально нужны.
+
+    Режим config не требует ни nixos-install, ни parted — раньше генерация конфига
+    на обычной машине падала ещё до первого вопроса.
+    """
+    if mode != "live":
+        return
+
+    required = list(BASE_REQUIRED_COMMANDS) + LIVE_REQUIRED_COMMANDS
+    if filesystem:
+        required += FS_REQUIRED_COMMANDS.get(filesystem, [])
+    if luks_enabled:
+        required.append("cryptsetup")
+
+    missing = [command for command in dict.fromkeys(required) if shutil.which(command) is None]
     if missing:
         print(f"Ошибка: отсутствуют команды: {', '.join(missing)}")
         sys.exit(1)
@@ -124,6 +173,25 @@ def require_root() -> None:
     if os.geteuid() != 0:
         print("Ошибка: для live-установки запусти скрипт от root.")
         sys.exit(1)
+
+
+def settle_disk(disk: str) -> None:
+    """Заставить ядро и udev увидеть новую таблицу разделов."""
+    run(["partprobe", disk], check=False)
+    run(["udevadm", "settle"], check=False)
+
+
+def wait_for_device(path: str, timeout: float = 20.0) -> None:
+    """Дождаться появления устройства в /dev.
+
+    Без этого mkfs.* иногда стартовал раньше, чем udev создавал node раздела.
+    """
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if Path(path).exists():
+            return
+        time.sleep(0.3)
+    raise RuntimeError(f"Устройство {path} не появилось за {timeout:.0f} с.")
 
 
 def format_and_mount(
@@ -145,6 +213,13 @@ def format_and_mount(
         current_partition += 1
     root_partition = partition_suffix(disk, current_partition)
 
+    if luks_enabled and not luks_passphrase:
+        raise RuntimeError("LUKS включён, но пароль не задан.")
+
+    # Стираем старые подписи ФС/RAID/LUKS, иначе blkid и initrd могут найти призраки.
+    run(["wipefs", "--all", "--force", disk])
+    settle_disk(disk)
+
     run(["parted", "-s", disk, "mklabel", "gpt"])
     run(["parted", "-s", disk, "mkpart", "ESP", "fat32", "1MiB", "513MiB"])
     run(["parted", "-s", disk, "set", "1", "esp", "on"])
@@ -163,6 +238,11 @@ def format_and_mount(
     root_fs_for_parted = "ext4" if luks_enabled else filesystem
     run(["parted", "-s", disk, "mkpart", "primary", root_fs_for_parted, f"{cursor}MiB", "100%"])
 
+    settle_disk(disk)
+    for partition in [efi, swap_partition, home_partition, root_partition]:
+        if partition is not None:
+            wait_for_device(partition)
+
     run(["mkfs.fat", "-F", "32", efi])
     if swap_partition is not None:
         run(["mkswap", swap_partition])
@@ -177,9 +257,26 @@ def format_and_mount(
     root_device = root_partition
     if luks_enabled:
         assert luks_passphrase is not None
-        run(["bash", "-lc", f"printf '%s' {shlex_quote(luks_passphrase)} | cryptsetup luksFormat --batch-mode {root_partition} -"])
-        run(["bash", "-lc", f"printf '%s' {shlex_quote(luks_passphrase)} | cryptsetup open {root_partition} {CRYPT_NAME} -"])
+        # Пароль уходит только в stdin процесса: не виден в argv, ps и логе.
+        run(
+            [
+                "cryptsetup",
+                "luksFormat",
+                "--type",
+                "luks2",
+                "--batch-mode",
+                "--key-file",
+                "-",
+                root_partition,
+            ],
+            stdin_data=luks_passphrase,
+        )
+        run(
+            ["cryptsetup", "open", "--key-file", "-", root_partition, CRYPT_NAME],
+            stdin_data=luks_passphrase,
+        )
         root_device = f"/dev/mapper/{CRYPT_NAME}"
+        wait_for_device(root_device)
 
     if filesystem == "btrfs":
         run(["mkfs.btrfs", "-f", root_device])
@@ -220,9 +317,9 @@ def install_system(host_name: str) -> None:
         REPO_ROOT,
         target_repo,
         ignore=shutil.ignore_patterns(
-            ".git",
             "result",
             ".installer-logs",
+            ".installer-backups",
             "__pycache__",
             "*.pyc",
             ".direnv",
@@ -230,16 +327,21 @@ def install_system(host_name: str) -> None:
         symlinks=False,
     )
     print("Сейчас начнётся сборка и установка системы. Это может занять от 20 до 40 минут.")
-    run_with_spinner(["nixos-install", "--flake", f"{target_repo}#{host_name}"], "Установка NixOS")
+    print("Вывод nixos-install показывается ниже целиком.")
+    # --no-root-passwd: иначе nixos-install в конце ждёт интерактивный ввод пароля root
+    # и весь non-interactive режим зависает. Пользователь создаётся конфигом.
+    run(["nixos-install", "--flake", f"{target_repo}#{host_name}", "--no-root-passwd"], stream=True)
 
 
-def cleanup_mounts() -> None:
-    for mountpoint in ["/mnt/home", "/mnt/boot", "/mnt"]:
-        try:
-            run(["umount", mountpoint], check=False)
-        except Exception:
-            pass
-    run(["swapoff", "-a"], check=False)
+def cleanup_mounts(luks_enabled: bool = False) -> None:
+    """Откатить монтирования и закрыть LUKS-маппинг.
+
+    Без cryptsetup close повторный запуск инсталлера падал на "device is busy".
+    """
+    run_quiet(["umount", "-R", "/mnt"])
+    run_quiet(["swapoff", "-a"])
+    if luks_enabled or Path(f"/dev/mapper/{CRYPT_NAME}").exists():
+        run_quiet(["cryptsetup", "close", CRYPT_NAME])
 
 
 def describe_plan(
@@ -259,6 +361,8 @@ def describe_plan(
     ]
     if separate_home:
         lines.append(f"Home size: {home_size_gib} GiB")
+    if luks_enabled and swap_size_gib > 0:
+        lines.append("Внимание: swap-раздел не шифруется, resume будет отключён")
     return lines
 
 
