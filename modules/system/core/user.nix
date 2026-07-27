@@ -1,4 +1,11 @@
-{ pkgs, userName ? "kotlin", ... }:
+{
+  pkgs,
+  userName ? "kotlin",
+  # Пароль первого входа. Задаётся через hosts/<host>/meta.nix (initialPassword).
+  # ВАЖНО: это публичное значение из гита, смени его сразу после установки: passwd
+  initialPassword ? "nixos",
+  ...
+}:
 {
   programs.zsh.enable = true;
 
@@ -9,7 +16,7 @@
       isNormalUser = true;
       group = userName;
       description = userName;
-      initialPassword = "1408";
+      inherit initialPassword;
       extraGroups = [
         "networkmanager"
         "wheel"
