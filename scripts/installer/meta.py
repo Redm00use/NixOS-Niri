@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
 import shutil
+from datetime import datetime
 from pathlib import Path
 
-from .common import REPO_ROOT, TEMPLATE_HOST_DIR
+from .common import BACKUP_DIR, REPO_ROOT, TEMPLATE_HOST_DIR
 
 
 def host_paths(host_name: str) -> tuple[Path, Path, Path]:
@@ -25,11 +25,17 @@ def ensure_host_files_for(host_name: str) -> tuple[Path, Path, Path]:
 
 
 def backup_host_dir(host_name: str) -> Path | None:
+    """Скопировать hosts/<host> в .installer-backups/.
+
+    Раньше backup складывался рядом, в hosts/<host>.backup-<timestamp>, и flake
+    честно превращал каждую копию в отдельный nixosConfiguration.
+    """
     target_host_dir, _, _ = host_paths(host_name)
     if not target_host_dir.exists():
         return None
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    backup_dir = target_host_dir.parent / f"{host_name}.backup-{timestamp}"
+    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+    backup_dir = BACKUP_DIR / f"{host_name}.backup-{timestamp}"
     shutil.copytree(target_host_dir, backup_dir)
     return backup_dir
 
@@ -87,9 +93,11 @@ def import_answers(path: Path) -> dict:
 
 
 def backup_file(path: Path) -> Path | None:
+    """Сохранить копию файла в .installer-backups/, а не рядом с оригиналом."""
     if not path.exists():
         return None
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    backup_path = path.with_name(f"{path.name}.backup-{timestamp}")
+    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+    backup_path = BACKUP_DIR / f"{path.parent.name}-{path.name}.backup-{timestamp}"
     shutil.copy2(path, backup_path)
     return backup_path

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import getpass
 import re
 import sys
 
 
 GPU_CHOICES = {"1": ("AMD", "amd"), "2": ("NVIDIA", "nvidia"), "3": ("Intel", "intel"), "4": ("VM", "vm")}
+GPU_VALUES = [value for _, value in GPU_CHOICES.values()]
 FILESYSTEM_CHOICES = {"1": ("btrfs", "btrfs"), "2": ("ext4", "ext4")}
 ROLE_CHOICES = {"1": ("desktop", "desktop"), "2": ("server", "server")}
 TIMEZONE_CHOICES = {
@@ -26,6 +28,21 @@ PRESET_CHOICES = {
     "6": ("custom", "custom"),
 }
 
+# hosts/common и hosts/generated — служебные каталоги, а не хосты.
+RESERVED_HOST_NAMES = {"common", "generated"}
+
+
+def require_tty(what: str) -> None:
+    if not sys.stdin.isatty():
+        print(f"Ошибка: нужен интерактивный ввод ({what}), но stdin не является терминалом.")
+        print("Передай значение аргументом CLI или через --import-json.")
+        sys.exit(1)
+
+
+def ask(label: str) -> str:
+    require_tty(label.strip())
+    return input(label)
+
 
 def print_header(title: str, step: str | None = None) -> None:
     print()
@@ -39,7 +56,7 @@ def choose_from_menu(title: str, options: list[tuple[str, str]], default_key: st
     for key, label in options:
         print(f"{key}) {label}")
     while True:
-        answer = input(f"Номер [{default_key}]: ").strip() or default_key
+        answer = ask(f"Номер [{default_key}]: ").strip() or default_key
         for key, value in options:
             if answer == key:
                 return value
@@ -53,13 +70,32 @@ def show_summary(title: str, rows: list[tuple[str, str]]) -> None:
 
 
 def prompt(label: str, default: str) -> str:
-    value = input(f"{label} [{default}]: ").strip()
+    value = ask(f"{label} [{default}]: ").strip()
     return value or default
 
 
-def validate_name(value: str, field_name: str) -> str:
-    if not re.fullmatch(r"[a-z_][a-z0-9_-]*", value):
-        print(f"Ошибка: {field_name} должно содержать только a-z, 0-9, _, - и начинаться с буквы или _.")
+def validate_user_name(value: str) -> str:
+    """Проверить имя пользователя по правилам useradd."""
+    if not re.fullmatch(r"[a-z_][a-z0-9_-]{0,31}", value):
+        print("Ошибка: имя пользователя должно быть в нижнем регистре, начинаться с буквы или '_',")
+        print("содержать только a-z, 0-9, '_', '-' и быть не длиннее 32 символов.")
+        sys.exit(1)
+    return value
+
+
+def validate_host_name(value: str) -> str:
+    """Проверить имя хоста как DNS-метку (RFC 1035).
+
+    networking.hostName в NixOS не принимает '_' и имена, начинающиеся с '-',
+    поэтому старая проверка пропускала конфиги, которые падали при сборке.
+    """
+    if len(value) > 63 or not re.fullmatch(r"[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?", value):
+        print("Ошибка: имя хоста должно быть валидной DNS-меткой (RFC 1035):")
+        print("только a-z, A-Z, 0-9 и '-', начинаться и заканчиваться буквой или цифрой, до 63 символов.")
+        print("Символ '_' в имени хоста недопустим — NixOS отклонит такой networking.hostName.")
+        sys.exit(1)
+    if value in RESERVED_HOST_NAMES:
+        print(f"Ошибка: имя хоста '{value}' зарезервировано — hosts/{value} служебный каталог.")
         sys.exit(1)
     return value
 
@@ -89,19 +125,20 @@ def choose_locale() -> str:
 
 
 def choose_preset() -> str:
-    return choose_from_menu("Preset конфигурации", [(key, value) for key, (_, value) in PRESET_CHOICES.items()], "5")
+    # По умолчанию 'custom': это desktop-конфиг, молча выбирать 'server' неправильно.
+    return choose_from_menu("Preset конфигурации", [(key, value) for key, (_, value) in PRESET_CHOICES.items()], "6")
 
 
 def choose_yes_no(label: str, default: bool = False) -> bool:
     suffix = "Y/n" if default else "y/N"
-    answer = input(f"{label} [{suffix}]: ").strip().lower()
+    answer = ask(f"{label} [{suffix}]: ").strip().lower()
     if not answer:
         return default
     return answer in {"y", "yes", "д", "да"}
 
 
 def prompt_int(label: str, default: int) -> int:
-    value = input(f"{label} [{default}]: ").strip()
+    value = ask(f"{label} [{default}]: ").strip()
     if not value:
         return default
     try:
@@ -116,11 +153,18 @@ def prompt_int(label: str, default: int) -> int:
 
 
 def prompt_passphrase() -> str:
-    value = input("LUKS пароль (пусто = отмена): ").strip()
+    """Спросить LUKS-пароль без эха.
+
+    Пароль не обрезается через strip(): пробелы — часть пароля.
+    """
+    require_tty("LUKS-пароль")
+    value = getpass.getpass("LUKS пароль (ввод скрыт): ")
     if not value:
         print("Ошибка: пустой пароль для LUKS недопустим.")
         sys.exit(1)
-    confirm_value = input("Повтори LUKS пароль: ").strip()
+    if len(value) < 8:
+        print("Предупреждение: пароль короче 8 символов.")
+    confirm_value = getpass.getpass("Повтори LUKS пароль: ")
     if value != confirm_value:
         print("Ошибка: пароли не совпадают.")
         sys.exit(1)
