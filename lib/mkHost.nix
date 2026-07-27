@@ -5,9 +5,11 @@
   home-manager,
   inputs,
   nur,
-  sharedHomeManager,
-  unstable,
+  mynvim,
+  noctalia,
   theme16,
+  pkgsFor,
+  unstableFor,
 }:
 name:
 let
@@ -27,7 +29,27 @@ let
   rootFs = meta.rootFs or "btrfs";
   luksPartUuid = meta.luksPartUuid or null;
   swapUuid = meta.swapUuid or null;
-  system = "x86_64-linux";
+
+  # Пароль первого входа. Переопределяется в hosts/<host>/meta.nix.
+  # После первой загрузки его нужно сменить через passwd.
+  initialPassword = meta.initialPassword or "nixos";
+
+  # Архитектура больше не зашита в flake: хост может быть и aarch64.
+  system = meta.system or "x86_64-linux";
+
+  pkgs = pkgsFor system;
+  unstable = unstableFor system;
+
+  sharedHomeManager = import ./mkHome.nix {
+    lib = nixpkgs.lib;
+    inherit
+      inputs
+      pkgs
+      unstable
+      mynvim
+      noctalia
+      ;
+  };
 in
 nixpkgs.lib.nixosSystem {
   inherit system;
@@ -39,6 +61,7 @@ nixpkgs.lib.nixosSystem {
       isDesktop
       hostName
       userName
+      initialPassword
       gpuType
       timeZone
       defaultLocale
