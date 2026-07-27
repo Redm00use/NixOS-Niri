@@ -1,0 +1,51 @@
+# Быстрая проверка Python-инсталлера.
+#
+# Основной CI собирает только Nix, а scripts/ до сих пор не проверялся вообще:
+# опечатка в импорте ловилась только в live-сессии на реальном железе.
+
+name: Installer
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - "scripts/**"
+      - ".github/workflows/installer.yml"
+  pull_request:
+    paths:
+      - "scripts/**"
+      - ".github/workflows/installer.yml"
+  workflow_dispatch:
+
+jobs:
+  installer:
+    name: Lint and smoke-test installer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Byte-compile scripts
+        run: python -m compileall -q scripts
+
+      - name: Import installer package
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, "scripts")
+          import installer.cli  # noqa: F401
+          import installer.disk  # noqa: F401
+          import installer.meta  # noqa: F401
+          import installer.prompts  # noqa: F401
+          import installer.common  # noqa: F401
+          print("installer imports OK")
+          PY
+
+      - name: Check --help
+        run: python scripts/install.py --help
