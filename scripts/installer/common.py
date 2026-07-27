@@ -153,4 +153,13 @@ def blkid_value(device: str, key: str) -> str | None:
 
 
 def partition_suffix(disk: str, number: int) -> str:
-    return f"{disk}p{number}" if "nvme" in disk or "mmcblk" in disk else f"{disk}{number}"
+    """Имя N-го раздела для диска.
+
+    Общее ядерное правило: если имя устройства заканчивается цифрой, между ним
+    и номером раздела ставится "p": nvme0n1p1, mmcblk0p1, loop0p1.
+    Иначе номер клеится напрямую: sda1, vda1.
+
+    Раньше проверялись только подстроки "nvme" и "mmcblk", поэтому для
+    loop-устройств получалось несуществующее /dev/loop01.
+    """
+    return f"{disk}p{number}" if disk[-1:].isdigit() else f"{disk}{number}"
