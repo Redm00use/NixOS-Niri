@@ -24,10 +24,10 @@ jobs:
     name: Lint and smoke-test installer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -38,12 +38,15 @@ jobs:
         run: |
           python - <<'PY'
           import sys
+
           sys.path.insert(0, "scripts")
+
           import installer.cli  # noqa: F401
+          import installer.common  # noqa: F401
           import installer.disk  # noqa: F401
           import installer.meta  # noqa: F401
           import installer.prompts  # noqa: F401
-          import installer.common  # noqa: F401
+
           print("installer imports OK")
           PY
 

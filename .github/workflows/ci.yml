@@ -3,8 +3,9 @@
 # Builds all NixOS configurations, Home Manager configurations,
 # and dev shells. Runs on push to main/master and on PRs.
 #
-# Required secrets:
-#   CACHIX_AUTH_TOKEN — for pushing to the viitorags cachix cache
+# Optional secrets:
+#   CACHIX_AUTH_TOKEN — for pushing to the viitorags cachix cache.
+#   Без секрета (форк, PR извне) шаг с Cachix просто пропускается.
 
 name: CI
 
@@ -19,19 +20,31 @@ on:
       - master
   workflow_dispatch:
 
+env:
+  CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
+  NIXPKGS_ALLOW_UNFREE: "1"
+
 jobs:
   # Fast early-return: validate that the flake evaluates at all
   check:
     name: Evaluate flake
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v16
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
 
-      - name: Use magic Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v8
+      - name: Set up Cachix
+        if: env.CACHIX_AUTH_TOKEN != ''
+        uses: cachix/cachix-action@v16
+        with:
+          name: viitorags
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
 
       - name: Check flake evaluation
         run: |
@@ -39,10 +52,7 @@ jobs:
             --all-systems \
             --no-build \
             --accept-flake-config \
-            --option tarball-ttl 0 \
-            --option accept-flake-config true
-        env:
-          NIXPKGS_ALLOW_UNFREE: "1"
+            --option tarball-ttl 0
 
   # Build every NixOS host defined in the flake
   build-nixos:
@@ -57,16 +67,24 @@ jobs:
         host: ${{ fromJson(needs.discover.outputs.hosts) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /usr/local/share/boost "${AGENT_TOOLSDIRECTORY:-}" || true
+          df -h /
 
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v16
-
-      - name: Use magic Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v8
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
 
       - name: Push to Cachix
-        uses: cachix/cachix-action@v15
+        if: env.CACHIX_AUTH_TOKEN != ''
+        uses: cachix/cachix-action@v16
         with:
           name: viitorags
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
@@ -78,8 +96,6 @@ jobs:
             --print-build-logs \
             --accept-flake-config \
             --option tarball-ttl 0
-        env:
-          NIXPKGS_ALLOW_UNFREE: "1"
 
       - name: Report closure size
         run: |
@@ -99,16 +115,24 @@ jobs:
         host: ${{ fromJson(needs.discover.outputs.hosts) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /usr/local/share/boost "${AGENT_TOOLSDIRECTORY:-}" || true
+          df -h /
 
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v16
-
-      - name: Use magic Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v8
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
 
       - name: Push to Cachix
-        uses: cachix/cachix-action@v15
+        if: env.CACHIX_AUTH_TOKEN != ''
+        uses: cachix/cachix-action@v16
         with:
           name: viitorags
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
@@ -120,8 +144,6 @@ jobs:
             --print-build-logs \
             --accept-flake-config \
             --option tarball-ttl 0
-        env:
-          NIXPKGS_ALLOW_UNFREE: "1"
 
   # Build all available dev shells
   build-devshells:
@@ -129,16 +151,18 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v16
-
-      - name: Use magic Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v8
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
 
       - name: Push to Cachix
-        uses: cachix/cachix-action@v15
+        if: env.CACHIX_AUTH_TOKEN != ''
+        uses: cachix/cachix-action@v16
         with:
           name: viitorags
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
@@ -149,7 +173,7 @@ jobs:
           SHELLS=$(nix eval \
             ".#devShells.x86_64-linux" \
             --apply 'builtins.attrNames' \
-            --json 2>/dev/null | jq -r '.[]')
+            --json | jq -r '.[]')
 
           if [ -z "$SHELLS" ]; then
             echo "No dev shells found — skipping"
@@ -165,8 +189,6 @@ jobs:
               --option tarball-ttl 0
             echo "::endgroup::"
           done
-        env:
-          NIXPKGS_ALLOW_UNFREE: "1"
 
   # Discover hosts dynamically — replicates the logic from flake.nix
   discover:
@@ -176,21 +198,24 @@ jobs:
       hosts: ${{ steps.set-hosts.outputs.hosts }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v16
-
-      - name: Use magic Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v8
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
 
       - name: Discover NixOS hosts
         id: set-hosts
         run: |
+          # Без 2>/dev/null: если eval падает, это должно быть видно в логе
           HOSTS=$(nix eval \
             ".#nixosConfigurations" \
             --apply 'builtins.attrNames' \
-            --json 2>/dev/null)
+            --accept-flake-config \
+            --json)
 
           echo "Discovered hosts: $HOSTS"
           echo "hosts=$HOSTS" >> "$GITHUB_OUTPUT"
