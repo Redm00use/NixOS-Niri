@@ -216,7 +216,7 @@ def format_and_mount(
     if luks_enabled and not luks_passphrase:
         raise RuntimeError("LUKS включён, но пароль не задан.")
 
-    # Стираем старые подписи ФС/RAID/LUKS, иначе blkid и initrd могут найти призраки.
+    # Стираем старые подписи ФС/RAID/LUKS, иначе blkid и initrd могут найти призраков.
     run(["wipefs", "--all", "--force", disk])
     settle_disk(disk)
 
@@ -317,6 +317,11 @@ def install_system(host_name: str) -> None:
         REPO_ROOT,
         target_repo,
         ignore=shutil.ignore_patterns(
+            # .git обязательно исключён: если его скопировать, nix считает каталог
+            # git-деревом и видит только отслеживаемые файлы. Только что созданные
+            # hosts/<host>/meta.nix и hardware-configuration.nix — untracked, и сборка
+            # падает с "path does not exist".
+            ".git",
             "result",
             ".installer-logs",
             ".installer-backups",

@@ -1,0 +1,202 @@
+# Реальная установка системы через scripts/install.py.
+#
+# На runner'е нельзя трогать физический диск, поэтому создаётся образ и подключается
+# как loop-устройство с --partscan. Для инсталлера это обычный блочный диск:
+# он его размечает, форматирует, монтирует в /mnt и выполняет nixos-install.
+#
+# Запуск только вручную и по расписанию: сборка занимает десятки минут.
+
+name: Install E2E
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 0"
+
+concurrency:
+  group: install-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  install:
+    name: Install [${{ matrix.name }}]
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: ext4
+            fs: ext4
+            luks: "false"
+          - name: btrfs + luks
+            fs: btrfs
+            luks: "true"
+
+    env:
+      CI_HOST: citest
+      CI_USER: citest
+      DISK_IMAGE: ${{ runner.temp }}/nixos-ci-disk.img
+      CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
+      NIXPKGS_ALLOW_UNFREE: "1"
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Free disk space
+        run: |
+          set -euxo pipefail
+          # Образ диска и вторая копия nix store внутри него не влезают
+          # в дефолтные ~14 GB свободного места на runner'е.
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /usr/local/share/boost "${AGENT_TOOLSDIRECTORY:-}" || true
+          df -h /
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
+
+      - name: Set up Cachix
+        if: env.CACHIX_AUTH_TOKEN != ''
+        uses: cachix/cachix-action@v16
+        with:
+          name: viitorags
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+
+      - name: Install host tools
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y \
+            parted cryptsetup-bin btrfs-progs dosfstools util-linux
+          # nixos-install и nixos-generate-config на не-NixOS берутся отсюда
+          nix profile install nixpkgs#nixos-install-tools
+          echo "$HOME/.nix-profile/bin" >> "$GITHUB_PATH"
+
+      - name: Prepare CI host overrides
+        run: |
+          set -euxo pipefail
+          # Инсталлер копирует шаблон hosts/generated только если файла ещё нет,
+          # поэтому заранее кладём свой default.nix.
+          # canTouchEfiVariables = false: у runner'а нет efivars, bootctl install иначе падает.
+          mkdir -p "hosts/${CI_HOST}"
+          cat > "hosts/${CI_HOST}/default.nix" <<'NIX'
+          { hostName ? "citest", ... }:
+          {
+            imports = [
+              ../common
+              ./hardware-configuration.nix
+            ];
+
+            networking.hostName = hostName;
+
+            boot.loader.systemd-boot.enable = true;
+            boot.loader.efi.canTouchEfiVariables = false;
+          }
+          NIX
+          cp hosts/generated/hardware-configuration.nix "hosts/${CI_HOST}/hardware-configuration.nix"
+
+      - name: Create loop disk
+        id: disk
+        run: |
+          set -euxo pipefail
+          truncate -s 24G "$DISK_IMAGE"
+          LOOP=$(sudo losetup --find --show --partscan "$DISK_IMAGE")
+          echo "loop=$LOOP" >> "$GITHUB_OUTPUT"
+          lsblk "$LOOP"
+
+      - name: Write LUKS key file
+        if: matrix.luks == 'true'
+        run: |
+          set -euo pipefail
+          printf '%s' 'ci-only-test-passphrase' | sudo tee /run/ci-luks.key > /dev/null
+          sudo chmod 600 /run/ci-luks.key
+
+      - name: Dry run
+        run: |
+          set -euxo pipefail
+          EXTRA=""
+          if [ "${{ matrix.luks }}" = "true" ]; then
+            EXTRA="--luks --luks-passphrase-file /run/ci-luks.key"
+          fi
+          sudo env "PATH=$PATH" NIXPKGS_ALLOW_UNFREE=1 \
+            python3 scripts/install.py \
+              --mode live \
+              --user "$CI_USER" \
+              --host "$CI_HOST" \
+              --role server \
+              --gpu vm \
+              --fs "${{ matrix.fs }}" \
+              --disk "${{ steps.disk.outputs.loop }}" \
+              --swap-size-gib 0 \
+              --timezone "Europe/Kyiv" \
+              --locale "en_US.UTF-8" \
+              $EXTRA \
+              --yes \
+              --dry-run
+
+      - name: Install through the installer
+        run: |
+          set -euxo pipefail
+          EXTRA=""
+          if [ "${{ matrix.luks }}" = "true" ]; then
+            EXTRA="--luks --luks-passphrase-file /run/ci-luks.key"
+          fi
+          sudo env "PATH=$PATH" NIXPKGS_ALLOW_UNFREE=1 \
+            python3 scripts/install.py \
+              --mode live \
+              --user "$CI_USER" \
+              --host "$CI_HOST" \
+              --role server \
+              --gpu vm \
+              --fs "${{ matrix.fs }}" \
+              --disk "${{ steps.disk.outputs.loop }}" \
+              --swap-size-gib 0 \
+              --timezone "Europe/Kyiv" \
+              --locale "en_US.UTF-8" \
+              $EXTRA \
+              --yes
+
+      - name: Verify installed system
+        run: |
+          set -euxo pipefail
+          # Системный профиль создан
+          sudo test -L /mnt/nix/var/nix/profiles/system
+          # Загрузчик установлен в ESP
+          sudo find /mnt/boot -maxdepth 3 -iname '*.efi' | head
+          # Копия репозитория и сгенерированный meta.nix на месте
+          sudo test -f "/mnt/etc/nixos/nixdots/hosts/${CI_HOST}/meta.nix"
+          sudo cat "/mnt/etc/nixos/nixdots/hosts/${CI_HOST}/meta.nix"
+          # Пользователь действительно создан
+          sudo grep -q "^${CI_USER}:" /mnt/etc/passwd
+          # При LUKS resume должен остаться выключенным
+          if [ "${{ matrix.luks }}" = "true" ]; then
+            ! sudo grep -rq "resume=" /mnt/boot/loader/entries || \
+              (echo "resume= найден в boot entries при включённом LUKS" && exit 1)
+          fi
+          df -h /mnt
+
+      - name: Make installer log readable
+        if: always()
+        run: sudo chmod -R a+rX .installer-logs || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: installer-log-${{ matrix.fs }}-luks-${{ matrix.luks }}
+          path: .installer-logs/
+          if-no-files-found: warn
+
+      - name: Cleanup
+        if: always()
+        run: |
+          set +e
+          sudo umount -R /mnt
+          sudo swapoff -a
+          sudo cryptsetup close cryptroot
+          sudo losetup -d "${{ steps.disk.outputs.loop }}"
+          sudo rm -f /run/ci-luks.key "$DISK_IMAGE"
+          exit 0

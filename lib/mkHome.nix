@@ -30,7 +30,13 @@ in
 {
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
+
+  # Stylix сверяет свой release с release nixpkgs и падает, если они расходятся.
+  # Здесь stylix идёт с master, а система — на nixos-25.11, поэтому проверка выключена
+  # осознанно. Побочный эффект: после крупного обновления stylix поломка вылезет
+  # не сообщением, а странными темами/шрифтами — это первое место, куда стоит смотреть.
   stylix.enableReleaseChecks = false;
+
   home-manager.extraSpecialArgs = {
     inherit
       inputs
