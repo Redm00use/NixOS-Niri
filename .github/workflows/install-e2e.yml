@@ -36,11 +36,12 @@ jobs:
     env:
       CI_HOST: citest
       CI_USER: citest
-      DISK_IMAGE: ${{ github.workspace }}/../nixos-ci-disk.img
+      DISK_IMAGE: ${{ runner.temp }}/nixos-ci-disk.img
+      CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
       NIXPKGS_ALLOW_UNFREE: "1"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Free disk space
         run: |
@@ -52,13 +53,15 @@ jobs:
           df -h /
 
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v16
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
 
-      - name: Use magic Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v8
-
-      - name: Push to Cachix
-        uses: cachix/cachix-action@v15
+      - name: Set up Cachix
+        if: env.CACHIX_AUTH_TOKEN != ''
+        uses: cachix/cachix-action@v16
         with:
           name: viitorags
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
@@ -176,7 +179,7 @@ jobs:
           fi
           df -h /mnt
 
-      - name: Upload installer log
+      - name: Make installer log readable
         if: always()
         run: sudo chmod -R a+rX .installer-logs || true
 
