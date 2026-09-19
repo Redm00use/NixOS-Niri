@@ -26,7 +26,7 @@
 	</tr>
 	<tr>
 		<td>WM</td>
-		<td>niri</td>
+		<td>niri 26.04 (stable)</td>
 	</tr>
 	<tr>
 		<td>Shell</td>

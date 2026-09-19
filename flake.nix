@@ -27,7 +27,8 @@
 
     nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=v0.6.0";
 
-    niri-blur.url = "github:YaLTeR/niri?ref=wip/branch";
+    # Stable Niri includes upstream blur support since 26.04.
+    niri.url = "github:niri-wm/niri/v26.04";
 
     noctalia = {
       url = "github:noctalia-dev/noctalia-shell";
