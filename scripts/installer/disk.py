@@ -3,10 +3,13 @@ from __future__ import annotations
 import curses
 import json
 import os
+import platform
 import shutil
 import subprocess
 import sys
 import time
+import re
+from dataclasses import dataclass
 from pathlib import Path
 
 from .common import (
@@ -40,6 +43,53 @@ FS_REQUIRED_COMMANDS = {
     "btrfs": ["mkfs.btrfs", "btrfs"],
     "ext4": ["mkfs.ext4"],
 }
+
+
+@dataclass
+class InstallResources:
+    root_mounted: bool = False
+    swap_device: str | None = None
+    crypt_open: bool = False
+
+
+def validate_disk(disk: str, home_size_gib: int, swap_size_gib: int, luks_enabled: bool) -> str:
+    if home_size_gib < 0 or swap_size_gib < 0:
+        raise ValueError("Размеры разделов не могут быть отрицательными.")
+    if not Path("/sys/firmware/efi").is_dir():
+        raise RuntimeError("Установщик поддерживает UEFI. Загрузи Live USB в режиме UEFI.")
+    path = Path(disk).resolve(strict=True)
+    if not path.is_block_device():
+        raise ValueError(f"{disk}: требуется целый блочный диск.")
+    payload = json.loads(subprocess_output([
+        "lsblk", "--json", "--bytes", "--paths", "--output",
+        "NAME,TYPE,SIZE,RO,MOUNTPOINTS", str(path),
+    ]))
+    devices = payload.get("blockdevices", [])
+    if len(devices) != 1 or devices[0].get("type") != "disk":
+        raise ValueError("Выбери целый диск, а не раздел или mapper-устройство.")
+    device = devices[0]
+    def check_unused(node):
+        if node.get("ro") or any(node.get("mountpoints") or []):
+            raise ValueError(f"Диск занят или доступен только для чтения: {node['name']}")
+        if node.get("type") not in {"disk", "part"}:
+            raise ValueError(f"На диске активно устройство {node['name']} ({node.get('type')}).")
+        holders = Path("/sys/class/block") / Path(node["name"]).name / "holders"
+        if holders.exists() and any(holders.iterdir()):
+            raise ValueError(f"Устройство используется: {node['name']}")
+        for child in node.get("children", []):
+            check_unused(child)
+    check_unused(device)
+    # Require 8 GiB for root in addition to EFI, user partitions and GPT margins.
+    required = (513 + (home_size_gib + swap_size_gib + 8) * 1024 + 1) * 1024**2
+    if int(device["size"]) < required:
+        raise ValueError("Недостаточно места: после EFI, swap и /home должно остаться минимум 8 GiB для root.")
+    for line in Path("/proc/self/mountinfo").read_text().splitlines():
+        mountpoint = line.split()[4]
+        if mountpoint == "/mnt" or mountpoint.startswith("/mnt/"):
+            raise ValueError("/mnt уже используется. Освободи точку установки перед запуском.")
+    if Path(f"/dev/mapper/{CRYPT_NAME}").exists():
+        raise ValueError(f"Mapper {CRYPT_NAME} уже существует; установщик не будет его перезаписывать.")
+    return str(path)
 
 
 def subprocess_output(command: list[str]) -> str:
@@ -157,6 +207,9 @@ def preflight_checks(mode: str, filesystem: str | None = None, luks_enabled: boo
     if mode != "live":
         return
 
+    if platform.machine() != "x86_64":
+        raise RuntimeError("Live-установка этого профиля поддерживает только x86_64 (meta.system по умолчанию).")
+
     required = list(BASE_REQUIRED_COMMANDS) + LIVE_REQUIRED_COMMANDS
     if filesystem:
         required += FS_REQUIRED_COMMANDS.get(filesystem, [])
@@ -177,8 +230,8 @@ def require_root() -> None:
 
 def settle_disk(disk: str) -> None:
     """Заставить ядро и udev увидеть новую таблицу разделов."""
-    run(["partprobe", disk], check=False)
-    run(["udevadm", "settle"], check=False)
+    run(["partprobe", disk])
+    run(["udevadm", "settle"])
 
 
 def wait_for_device(path: str, timeout: float = 20.0) -> None:
@@ -202,7 +255,12 @@ def format_and_mount(
     swap_size_gib: int,
     luks_enabled: bool,
     luks_passphrase: str | None,
+    *,
+    resources: InstallResources,
 ) -> None:
+    if filesystem not in FS_REQUIRED_COMMANDS:
+        raise ValueError("Неизвестная файловая система.")
+    Path("/mnt").mkdir(parents=True, exist_ok=True)
     efi = partition_suffix(disk, 1)
     current_partition = 2
     swap_partition = partition_suffix(disk, current_partition) if swap_size_gib > 0 else None
@@ -247,6 +305,7 @@ def format_and_mount(
     if swap_partition is not None:
         run(["mkswap", swap_partition])
         run(["swapon", swap_partition])
+        resources.swap_device = swap_partition
 
     if home_partition is not None:
         if filesystem == "btrfs":
@@ -275,20 +334,25 @@ def format_and_mount(
             ["cryptsetup", "open", "--key-file", "-", root_partition, CRYPT_NAME],
             stdin_data=luks_passphrase,
         )
+        resources.crypt_open = True
         root_device = f"/dev/mapper/{CRYPT_NAME}"
         wait_for_device(root_device)
 
     if filesystem == "btrfs":
         run(["mkfs.btrfs", "-f", root_device])
         run(["mount", root_device, "/mnt"])
+        resources.root_mounted = True
         run(["btrfs", "subvolume", "create", "/mnt/@"])
         if home_partition is None:
             run(["btrfs", "subvolume", "create", "/mnt/@home"])
         run(["umount", "/mnt"])
+        resources.root_mounted = False
         run(["mount", "-o", "subvol=@", root_device, "/mnt"])
+        resources.root_mounted = True
     else:
         run(["mkfs.ext4", "-F", root_device])
         run(["mount", root_device, "/mnt"])
+        resources.root_mounted = True
 
     run(["mkdir", "-p", "/mnt/boot"])
     run(["mount", efi, "/mnt/boot"])
@@ -305,8 +369,15 @@ def generate_hardware_config() -> None:
     run_with_spinner(["nixos-generate-config", "--root", "/mnt"], "Генерация hardware-configuration.nix")
 
 
-def copy_hardware_config(target_hardware: Path) -> None:
-    shutil.copy2("/mnt/etc/nixos/hardware-configuration.nix", target_hardware)
+def copy_hardware_config(target_hardware: Path, swap_uuid: str | None = None) -> None:
+    content = Path("/mnt/etc/nixos/hardware-configuration.nix").read_text(encoding="utf-8")
+    # The generator also discovers swap from the live environment. Keep only
+    # the target swap partition; never persist a live USB/zram swap device.
+    swap = f'  swapDevices = [ {{ device = "/dev/disk/by-uuid/{swap_uuid}"; }} ];' if swap_uuid else "  swapDevices = [ ];"
+    content, count = re.subn(r"(?ms)^  swapDevices\s*=\s*\[.*?\];", lambda _: swap, content)
+    if count != 1:
+        raise RuntimeError("Не удалось определить swapDevices в hardware-configuration.nix.")
+    target_hardware.write_text(content, encoding="utf-8")
 
 
 def install_system(host_name: str) -> None:
@@ -318,30 +389,39 @@ def install_system(host_name: str) -> None:
         target_repo,
         ignore=shutil.ignore_patterns(
             "result",
+            ".git",
             ".installer-logs",
             ".installer-backups",
             "__pycache__",
             "*.pyc",
             ".direnv",
         ),
-        symlinks=False,
+        symlinks=True,
     )
     print("Сейчас начнётся сборка и установка системы. Это может занять от 20 до 40 минут.")
     print("Вывод nixos-install показывается ниже целиком.")
     # --no-root-passwd: иначе nixos-install в конце ждёт интерактивный ввод пароля root
     # и весь non-interactive режим зависает. Пользователь создаётся конфигом.
-    run(["nixos-install", "--flake", f"{target_repo}#{host_name}", "--no-root-passwd"], stream=True)
+    run(["nixos-install", "--flake", f"path:{target_repo}#{host_name}", "--no-root-passwd"], stream=True)
 
 
-def cleanup_mounts(luks_enabled: bool = False) -> None:
-    """Откатить монтирования и закрыть LUKS-маппинг.
-
-    Без cryptsetup close повторный запуск инсталлера падал на "device is busy".
-    """
-    run_quiet(["umount", "-R", "/mnt"])
-    run_quiet(["swapoff", "-a"])
-    if luks_enabled or Path(f"/dev/mapper/{CRYPT_NAME}").exists():
-        run_quiet(["cryptsetup", "close", CRYPT_NAME])
+def cleanup_mounts(resources: InstallResources) -> None:
+    """Release only resources created by this installation."""
+    if resources.root_mounted:
+        if run_quiet(["umount", "-R", "/mnt"]):
+            resources.root_mounted = False
+        else:
+            print("Не удалось размонтировать /mnt; проверь mount перед перезагрузкой.")
+    if resources.swap_device:
+        if run_quiet(["swapoff", resources.swap_device]):
+            resources.swap_device = None
+        else:
+            print("Не удалось отключить swap установки.")
+    if resources.crypt_open and not resources.root_mounted:
+        if run_quiet(["cryptsetup", "close", CRYPT_NAME]):
+            resources.crypt_open = False
+        else:
+            print(f"Не удалось закрыть {CRYPT_NAME}.")
 
 
 def describe_plan(
@@ -376,4 +456,8 @@ def capture_layout_ids(disk: str, separate_home: bool, swap_size_gib: int, luks_
     root_partition = partition_suffix(disk, current_partition)
     luks_part_uuid = blkid_value(root_partition, "PARTUUID") if luks_enabled else None
     swap_uuid = blkid_value(swap_partition, "UUID") if swap_partition is not None else None
+    if luks_enabled and not luks_part_uuid:
+        raise RuntimeError("Не удалось прочитать PARTUUID LUKS-раздела.")
+    if swap_partition and not swap_uuid:
+        raise RuntimeError("Не удалось прочитать UUID swap-раздела.")
     return luks_part_uuid, swap_uuid

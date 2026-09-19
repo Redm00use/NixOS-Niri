@@ -130,7 +130,7 @@ def run_with_spinner(command: list[str], title: str) -> None:
             print(f"\r{frames[index % len(frames)]} {title}...", end="", flush=True)
             index += 1
             time.sleep(0.1)
-        print(f"\r✓ {title}...{' ' * 20}")
+        print(f"\r{' ' * (len(title) + 30)}\r", end="", flush=True)
 
     thread = threading.Thread(target=spinner, daemon=True)
     thread.start()
@@ -139,6 +139,7 @@ def run_with_spinner(command: list[str], title: str) -> None:
     finally:
         stop = True
         thread.join()
+    print(f"✓ {title}")
 
 
 def command_exists(name: str) -> bool:
@@ -153,4 +154,4 @@ def blkid_value(device: str, key: str) -> str | None:
 
 
 def partition_suffix(disk: str, number: int) -> str:
-    return f"{disk}p{number}" if "nvme" in disk or "mmcblk" in disk else f"{disk}{number}"
+    return f"{disk}p{number}" if disk[-1:].isdigit() else f"{disk}{number}"

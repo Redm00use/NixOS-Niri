@@ -76,8 +76,9 @@ def prompt(label: str, default: str) -> str:
 
 def validate_user_name(value: str) -> str:
     """Проверить имя пользователя по правилам useradd."""
-    if not re.fullmatch(r"[a-z_][a-z0-9_-]{0,31}", value):
-        print("Ошибка: имя пользователя должно быть в нижнем регистре, начинаться с буквы или '_',")
+    if value in {"root", "nobody", "nixbld", "greeter"} or not re.fullmatch(r"[a-z_][a-z0-9_-]{0,31}", value):
+        print("Ошибка: системные имена root/nobody/nixbld/greeter недопустимы.")
+        print("Имя пользователя должно быть в нижнем регистре, начинаться с буквы или '_',")
         print("содержать только a-z, 0-9, '_', '-' и быть не длиннее 32 символов.")
         sys.exit(1)
     return value

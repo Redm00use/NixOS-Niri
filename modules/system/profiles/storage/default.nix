@@ -10,7 +10,7 @@
 
   boot.initrd.luks.devices = lib.mkIf (luksEnabled && luksPartUuid != null) {
     cryptroot = {
-      device = "/dev/disk/by-partuuid/${luksPartUuid}";
+      device = lib.mkDefault "/dev/disk/by-partuuid/${luksPartUuid}";
       allowDiscards = true;
     };
   };

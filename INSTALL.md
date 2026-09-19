@@ -1,73 +1,108 @@
-# Установка
+# Установка NixOS / Niri
 
-Запуск:
+Требуется Python 3.10+. Запускай команды из корня проекта.
 
-```bash
-python3 ./scripts/install.py
-```
-
-Неинтерактивный режим тоже есть. Пример генерации host-конфига:
+## Генерация конфигурации
 
 ```bash
-python3 ./scripts/install.py --mode config --host mypc --user me --role desktop --timezone Europe/Kyiv --locale ru_RU.UTF-8 --gpu amd --yes
+python3 scripts/install.py --mode config --host mypc --user me --role desktop --timezone Europe/Kyiv --locale ru_RU.UTF-8 --gpu amd --yes
 ```
 
-Пример live-установки:
+Создаётся `hosts/mypc`. У существующего хоста сохраняются пользовательские
+атрибуты `meta.nix`, в том числе `system`, `initialPassword` и настройки дисков.
+Перед изменением создаётся копия в `.installer-backups/`.
+
+Новый `hardware-configuration.nix` — шаблон, его нужно заменить конфигурацией
+конкретного компьютера. На уже установленной NixOS можно использовать файл,
+созданный `sudo nixos-generate-config` в `/etc/nixos/hardware-configuration.nix`.
+Не копируй hardware-конфиг с другого компьютера.
+
+После подготовки hardware-конфига:
 
 ```bash
-sudo python3 ./scripts/install.py --mode live --host mypc --user me --role desktop --timezone Europe/Kyiv --locale ru_RU.UTF-8 --gpu amd --fs btrfs --disk /dev/nvme0n1 --swap-size-gib 8 --yes
+sudo nixos-rebuild switch --flake 'path:.#mypc'
 ```
 
-Для live-режима запускай от `root`:
+Явный `path:` позволяет Nix увидеть новый каталог хоста даже до `git add`.
+
+## Предварительный просмотр
 
 ```bash
-sudo python3 ./scripts/install.py
+python3 scripts/install.py --mode live --host mypc --user me --gpu amd --disk /dev/nvme0n1 --fs btrfs --swap-size-gib 8 --yes --dry-run
 ```
 
-Установщик умеет два режима:
-- только сгенерировать config
-- полная live-установка NixOS
+`--dry-run` работает без root и утилит NixOS. Он проверяет параметры и показывает
+план, но не проверяет доступность диска и собираемость NixOS. Файлы, резервные
+копии и логи не создаются; даже `--export-json` в этом режиме ничего не записывает.
+Пароль LUKS для предварительного просмотра не нужен.
 
-Он спрашивает:
-- имя пользователя
-- имя хоста
-- роль: `desktop` / `server`
-- timezone
-- locale
-- видеокарту: AMD / NVIDIA / Intel
-- подтверждение выбора
+## Live-установка
 
-Для live-установки дополнительно:
-- выбор диска
-- выбор файловой системы root: `btrfs` или `ext4`
-- отдельный `/home`
-- размер `/home`
-- размер `swap`
-- включение `LUKS`
-- явное подтверждение стирания диска
+Загрузи NixOS Live USB в режиме **UEFI**, на машине **x86_64**. Нужен интернет
+для загрузки flake inputs и пакетов. Legacy BIOS и live-установка на ARM этим
+установщиком не поддерживаются.
 
-После этого обновляется `hosts/<hostName>/meta.nix`.
-
-Имя хоста теперь одновременно используется как имя каталога в `hosts/<hostName>` и как flake target.
-
-Сборка:
+Интерактивный запуск:
 
 ```bash
-sudo nixos-rebuild switch --flake .#<hostName>
+sudo python3 scripts/install.py
 ```
 
-В live-режиме скрипт сам:
-- размечает диск GPT
-- создаёт EFI-раздел и root-раздел
-- при выборе создаёт отдельные разделы `swap` и `/home`
-- форматирует разделы
-- умеет шифровать `root` через `LUKS`
-- монтирует `/mnt`
-- запускает `nixos-generate-config`
-- копирует репозиторий в `/mnt/etc/nixos/nixdots`
-- запускает `nixos-install`
+Выбери `live`, заполни параметры и проверь выбранный диск. Live-установка
+**полностью стирает диск**. Без `--yes` требуется подтверждение `ERASE` и диска.
+`--yes` пропускает эти подтверждения.
 
-Важно: live-режим полностью стирает выбранный диск.
+До стирания проверяются необходимые утилиты, UEFI, тип и доступность диска,
+активные разделы/mapper-устройства, свободная точка `/mnt` и достаточный размер.
+Под root должно остаться не меньше 8 GiB; для полного desktop-профиля выделяй
+больше места с учётом пакетов и будущих поколений NixOS.
 
-`meta.nix` теперь также влияет на runtime storage-настройки через `modules/system/profiles/storage/default.nix`.
-После live-установки инсталлер автоматически сохраняет `PARTUUID` для LUKS-root и `UUID` для swap, чтобы Nix мог настроить `boot.initrd.luks.devices` и `boot.resumeDevice`.
+Установщик создаёт GPT, EFI 512 MiB, root ext4/btrfs и опциональные swap и `/home`.
+На btrfs без отдельного раздела `/home` используется подтом `@home`.
+После форматирования он генерирует hardware-конфиг, сохраняет UUID,
+копирует проект в `/mnt/etc/nixos/nixdots` и запускает `nixos-install`.
+В установленной системе проект находится в `/etc/nixos/nixdots`.
+
+LUKS шифрует **только root**: отдельные `/home` и swap остаются незашифрованными.
+При LUKS гибернация через этот swap не включается.
+Пароль передаётся `cryptsetup` через stdin. Для автоматического запуска используй
+`--luks --luks-passphrase-file /путь/к/файлу`; один завершающий перевод строки
+удаляется. Пароль не экспортируется в JSON.
+
+После завершения, ошибки или Ctrl+C установщик освобождает созданные им
+монтирования, swap и LUKS-маппинг. Стертые данные это не восстанавливает.
+Чужой swap не отключается и не переносится в hardware-конфиг.
+
+Пользователь первого входа — указанный `--user`; пароль по умолчанию — `nixos`
+(если `initialPassword` не переопределён в `meta.nix`). Сразу смени его через
+`passwd`. Установщик использует `--no-root-passwd` и не задаёт пароль root.
+
+## Автоматизация
+
+При `--yes` обязательны `--mode`, `--host`, `--user`, `--gpu` (или GPU из preset
+в JSON), а для live ещё `--disk`. Пропущенные необязательные параметры получают
+значения: desktop, Europe/Kyiv, ru_RU.UTF-8, btrfs, swap 8 GiB, без отдельного
+`/home` и без LUKS. Preset `vm` использует ext4 и swap 4 GiB.
+
+- `--separate-home --home-size-gib 100` включает отдельный `/home`.
+- `--swap-size-gib 0` отключает swap-раздел.
+- `--export-json answers.json` сохраняет параметры в обоих режимах, кроме dry-run.
+- `--import-json answers.json` загружает параметры; CLI имеет приоритет.
+- `--no-luks` и `--no-separate-home` переопределяют значения `true` из JSON.
+  Для отключения отдельного home также задай `--home-size-gib 0`, если JSON содержит размер.
+
+Неизвестные ключи, неверные типы, отрицательные размеры и некорректные значения
+отклоняются до изменения дисков. `--yes` не запрашивает недостающие значения,
+а сообщает, какие обязательные параметры нужно передать.
+
+## Проверки
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+Тесты подменяют системные команды, проверяют сценарии и обработку сбоев;
+они не форматируют реальные диски. Полную сборку и загрузку проверяй отдельно
+в UEFI VM на NixOS с временным диском. Логи выполненных команд находятся в
+`.installer-logs/` (при недоступности каталога — во временном каталоге системы).
+Вывод длительного `nixos-install` показывается в терминале.

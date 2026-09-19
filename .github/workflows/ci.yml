@@ -20,6 +20,16 @@ on:
   workflow_dispatch:
 
 jobs:
+  installer-tests:
+    name: Installer regression tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m unittest discover -s tests -v
+
   # Fast early-return: validate that the flake evaluates at all
   check:
     name: Evaluate flake
