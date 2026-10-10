@@ -35,7 +35,7 @@ jobs:
     name: Evaluate flake
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v16
@@ -67,7 +67,7 @@ jobs:
         host: ${{ fromJson(needs.discover.outputs.hosts) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v16
@@ -109,7 +109,7 @@ jobs:
         host: ${{ fromJson(needs.discover.outputs.hosts) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v16
@@ -139,7 +139,7 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v16
@@ -186,7 +186,7 @@ jobs:
       hosts: ${{ steps.set-hosts.outputs.hosts }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v16
