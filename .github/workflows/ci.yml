@@ -41,7 +41,7 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v16
 
       - name: Use magic Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v8
+        uses: DeterminateSystems/magic-nix-cache-action@v15
 
       - name: Check flake evaluation
         run: |
@@ -73,7 +73,7 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v16
 
       - name: Use magic Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v8
+        uses: DeterminateSystems/magic-nix-cache-action@v15
 
       - name: Push to Cachix
         uses: cachix/cachix-action@v15
@@ -115,7 +115,7 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v16
 
       - name: Use magic Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v8
+        uses: DeterminateSystems/magic-nix-cache-action@v15
 
       - name: Push to Cachix
         uses: cachix/cachix-action@v15
@@ -145,7 +145,7 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v16
 
       - name: Use magic Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v8
+        uses: DeterminateSystems/magic-nix-cache-action@v15
 
       - name: Push to Cachix
         uses: cachix/cachix-action@v15
@@ -192,7 +192,7 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v16
 
       - name: Use magic Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v8
+        uses: DeterminateSystems/magic-nix-cache-action@v15
 
       - name: Discover NixOS hosts
         id: set-hosts
