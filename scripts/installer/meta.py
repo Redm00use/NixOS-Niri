@@ -57,6 +57,7 @@ def write_meta(
     swap_uuid: str | None = None,
     host_dir: Path | None = None,
     preserve_storage: bool = False,
+    lvm_enabled: bool = False,
 ) -> None:
     actual_host_dir = host_dir or (REPO_ROOT / "hosts" / host_name)
     actual_host_dir.mkdir(parents=True, exist_ok=True)
@@ -69,7 +70,7 @@ def write_meta(
         values.update({
             "separateHome": separate_home, "homeSizeGiB": home_size_gib,
             "swapSizeGiB": swap_size_gib, "luksEnabled": luks_enabled,
-            "rootFs": filesystem, "luksPartUuid": luks_part_uuid, "swapUuid": swap_uuid,
+            "lvmEnabled": lvm_enabled, "rootFs": filesystem, "luksPartUuid": luks_part_uuid, "swapUuid": swap_uuid,
         })
     body = "{\n" + "".join(f"  {key} = {nix_value(value)};\n" for key, value in values.items()) + "}\n"
     # Preserve custom attributes (system, initialPassword, etc.) and storage
@@ -104,7 +105,7 @@ def validate_answers(data: dict) -> None:
     }
     strings = {"user", "host", "timezone", "locale", "disk"}
     integers = {"home_size_gib", "swap_size_gib"}
-    booleans = {"luks", "separate_home"}
+    booleans = {"luks", "separate_home", "lvm"}
     for key, value in data.items():
         if key not in set(enums) | strings | integers | booleans:
             raise ValueError(f"Неизвестный параметр JSON: {key}")

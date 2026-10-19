@@ -2,7 +2,7 @@ input {
   keyboard {
     xkb {
       layout "us,ru"
-      options "grp:caps_toggle"
+      options "caps:menu"
     }
     numlock
   }
@@ -96,12 +96,10 @@ environment {
   "XDG_SESSION_DESKTOP" "niri"
 }
 
-spawn-at-startup "dbus-update-activation-environment --systemd --all"
-spawn-at-startup "eval $(gnome-keyring-daemon --start --components=pkcs11,secrets,ssh,gpg)"
-spawn-at-startup "polkit-gnome-authentication-agent-1"
-spawn-at-startup "xwayland-satellite"
-spawn-at-startup "wl-paste --type text --watch cliphist store"
-spawn-at-startup "wl-paste --type image --watch cliphist store"
+// Keyring and polkit are started by PAM/systemd; Niri manages Xwayland.
+spawn-at-startup "dbus-update-activation-environment" "--systemd" "--all"
+spawn-at-startup "wl-paste" "--type" "text" "--watch" "cliphist" "store"
+spawn-at-startup "wl-paste" "--type" "image" "--watch" "cliphist" "store"
 
 screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
 
@@ -116,16 +114,18 @@ gestures {
 }
 
 binds {
+  // Caps Lock is mapped to Menu so it cannot latch uppercase.
+  Menu repeat=false allow-inhibiting=false { switch-layout "next"; }
   Mod+Return { spawn "wezterm" "start"; }
   Mod+A { spawn "walker"; }
   Mod+S { spawn "gtk-launch" "spotify-catppuccin"; }
   Mod+T { spawn "gtk-launch" "org.telegram.desktop"; }
   Mod+D { spawn "discordcanary"; }
   Mod+Z { spawn "google-chrome-canary"; }
-  Mod+F { spawn "noctalia-shell-patched" "ipc" "call" "launcher" "toggle"; }
-  Mod+V { spawn "noctalia-shell-patched" "ipc" "call" "launcher" "clipboard"; }
-  Mod+W { spawn "noctalia-shell-patched" "ipc" "call" "wallpaper" "toggle"; }
-  Mod+X { spawn "noctalia-shell-patched" "ipc" "call" "sessionMenu" "toggle"; }
+  Mod+F { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
+  Mod+V { spawn "noctalia" "msg" "panel-toggle" "clipboard"; }
+  Mod+W { spawn "noctalia" "msg" "panel-toggle" "wallpaper"; }
+  Mod+X { spawn "noctalia" "msg" "panel-toggle" "session"; }
   Scroll_Lock { spawn "scrolllock_keyboard"; }
   Mod+E { spawn "nautilus" "--new-window"; }
   Mod+C { spawn "zeditor"; }
@@ -181,7 +181,7 @@ binds {
   "Mod+Page_Down" { focus-workspace-down; }
   "Mod+Page_Up" { focus-workspace-up; }
   Mod+Period { expel-window-from-column; }
-  Mod+Q { close-window; }
+  Mod+Q allow-inhibiting=false { close-window; }
   Mod+R { switch-preset-column-width; }
   Mod+Shift+1 { move-column-to-workspace 1; }
   Mod+Shift+2 { move-column-to-workspace 2; }
@@ -444,4 +444,10 @@ window-rule {
 window-rule {
   match title="Error"
   open-floating true
+}
+
+// Keep clear wallpaper between Noctalia v5 capsules.
+layer-rule {
+  match namespace="^noctalia-bar-"
+  background-effect { blur false; }
 }

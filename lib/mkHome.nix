@@ -3,7 +3,6 @@
   inputs,
   pkgs,
   unstable,
-  mynvim,
   noctalia,
 }:
 {
@@ -20,7 +19,6 @@ let
     inherit
       pkgs
       unstable
-      mynvim
       role
       ;
   };
@@ -35,7 +33,6 @@ in
     inherit
       inputs
       unstable
-      mynvim
       noctalia
       role
       isDesktop
@@ -57,6 +54,9 @@ in
       inputs.stylix.homeModules.stylix
       noctalia.homeModules.default
       inputs.dms.homeModules.dank-material-shell
+    ]
+    ++ lib.optionals isDesktop [
+      ../modules/home/programs/noctalia-v5
     ]
     ++ lib.optional (builtins.pathExists hostHome) hostHome
     ++ [

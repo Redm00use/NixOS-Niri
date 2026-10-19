@@ -1,0 +1,9 @@
+id = "local/active_app"
+name = "Active Application"
+version = "1.0.0"
+plugin_api = 23
+author = "local"
+description = "Application name and native icon from the Niri event stream."
+[[widget]]
+id = "name"
+entry = "widget.luau"

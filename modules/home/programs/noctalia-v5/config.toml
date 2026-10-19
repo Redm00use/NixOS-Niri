@@ -1,0 +1,146 @@
+# Reproduction of the original Niri/Noctalia v4 profile on v5.2.0.
+[shell]
+font_family = "Noto Sans"
+shared_gl_context = false
+setup_wizard_enabled = false
+lang = "ru"
+corner_radius_scale = 0.65
+telemetry_enabled = false
+clipboard_auto_paste = "off"
+polkit_agent = false
+
+[shell.shadow]
+direction = "down_right"
+
+[shell.panel]
+transparency_mode = "solid"
+borders = false
+shadow = true
+launcher_placement = "floating"
+launcher_position = "center"
+clipboard_placement = "floating"
+clipboard_position = "top_center"
+control_center_placement = "floating"
+wallpaper_placement = "floating"
+session_placement = "floating"
+
+[shell.launcher]
+categories = false
+compact = false
+app_grid = true
+sort_by_usage = true
+show_app_origin_indicator = false
+auto_paste = "off"
+
+[shell.launcher.providers.session]
+global = true
+
+[theme]
+source = "custom"
+custom_palette = "Original"
+mode = "dark"
+
+[theme.templates]
+enable_builtin_templates = false
+enable_community_templates = false
+
+[bar.main]
+position = "top"
+thickness = 40
+background_opacity = 0.0
+radius = 18
+margin_ends = 10
+margin_edge = 8
+padding = 16
+widget_spacing = 12
+font_scale = 1.06
+scale = 1.15
+shadow = false
+auto_hide = false
+reserve_space = true
+capsule = true
+capsule_fill = "#24273a"
+capsule_foreground = "#cdd6f4"
+capsule_radius = 10
+capsule_opacity = 0.68
+capsule_padding = 6
+start = ["workspaces", "audio_visualizer"]
+center = ["local/active_app:name"]
+end = ["noctalia/screen_recorder:recorder", "notifications", "volume", "bluetooth", "keyboard_layout", "clock"]
+
+[widget.audio_visualizer]
+width = 200
+mirrored = true
+show_when_idle = true
+color_1 = "#b4befe"
+color_2 = "#b4befe"
+
+[widget.workspaces]
+hide_when_empty = true
+show_labels = true
+show_icons = false
+label_source = "id"
+labels_only_when_occupied = true
+max_label_chars = 2
+pill_scale = 0.7
+
+[widget.notifications]
+hide_when_no_unread = false
+[widget.volume]
+show_label = false
+[widget.bluetooth]
+type = "custom_button"
+glyph = "bluetooth"
+label = ""
+tooltip = "Bluetooth"
+[widget.bluetooth.actions]
+left = "panel-toggle control-center bluetooth"
+right = "bluetooth-toggle"
+[widget.keyboard_layout]
+show_glyph = false
+show_label = true
+display = "short"
+[widget.clock]
+format = "{:%H:%M %a, %b %d}"
+tooltip_format = "{:%H:%M %a, %b %d}"
+
+[wallpaper.default]
+path = "@WALLPAPER_DIR@/meowrch_26.png"
+
+[wallpaper]
+enabled = true
+directory = "@WALLPAPER_DIR@"
+fill_mode = "crop"
+transition = ["honeycomb"]
+transition_duration = 1500
+edge_smoothness = 0.05
+transition_on_startup = false
+
+[dock]
+enabled = false
+[desktop_widgets]
+enabled = false
+[backdrop]
+enabled = false
+[notification]
+background_opacity = 0.78
+keep_dismissed_in_history = false
+[location]
+auto_locate = false
+address = "Samar, Dnipropetrovsk Oblast, Ukraine"
+[weather]
+enabled = true
+unit = "celsius"
+[lockscreen]
+blur_intensity = 0.0
+tint_intensity = 0.0
+transition = []
+
+[plugins]
+enabled = ["noctalia/screen_recorder", "local/active_app"]
+
+[[plugins.source]]
+name = "original-compatible"
+kind = "path"
+location = "@PLUGIN_DIR@"
+enabled = true

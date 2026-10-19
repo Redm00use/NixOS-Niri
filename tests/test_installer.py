@@ -117,13 +117,20 @@ class InstallerTests(unittest.TestCase):
                 rootnum = 2 + bool(swap) + home
                 rootdev = '/dev/mapper/cryptroot' if luks else f'/dev/nvme0n1p{rootnum}'
                 self.assertTrue(any(c[0] == 'mkfs.' + fs and c[-1] == rootdev for c in commands))
-                self.assertIn(['mount', '/dev/nvme0n1p1', '/mnt/boot'], commands)
+                self.assertIn(['mount', '-t', 'vfat', '/dev/nvme0n1p1', '/mnt/boot'], commands)
+                # Newly formatted partitions must not depend on stale
+                # filesystem autodetection from udev/blkid.
+                for command in commands:
+                    if command[0] == 'mount':
+                        self.assertIn('-t', command)
+                        mount_type = command[command.index('-t') + 1]
+                        self.assertEqual(mount_type, 'vfat' if command[-1] == '/mnt/boot' else fs)
                 self.assertTrue(resources.root_mounted)
                 self.assertEqual(resources.crypt_open, luks)
                 self.assertEqual(resources.swap_device, '/dev/nvme0n1p2' if swap else None)
                 self.assertFalse(any('secret' in c for c in commands))
                 if fs == 'btrfs' and not home:
-                    self.assertIn(['mount', '-o', 'subvol=@home', rootdev, '/mnt/home'], commands)
+                    self.assertIn(['mount', '-t', 'btrfs', '-o', 'subvol=@home', rootdev, '/mnt/home'], commands)
 
     def test_cleanup_is_scoped(self):
         with patch.object(disk, 'run_quiet', return_value=True) as run:

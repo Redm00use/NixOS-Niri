@@ -5,7 +5,6 @@
   home-manager,
   inputs,
   nur,
-  mynvim,
   noctalia,
   theme16,
   pkgsFor,
@@ -26,6 +25,7 @@ let
   homeSizeGiB = meta.homeSizeGiB or 0;
   swapSizeGiB = meta.swapSizeGiB or 0;
   luksEnabled = meta.luksEnabled or false;
+  lvmEnabled = meta.lvmEnabled or false;
   rootFs = meta.rootFs or "btrfs";
   luksPartUuid = meta.luksPartUuid or null;
   swapUuid = meta.swapUuid or null;
@@ -46,7 +46,6 @@ let
       inputs
       pkgs
       unstable
-      mynvim
       noctalia
       ;
   };
@@ -69,6 +68,7 @@ nixpkgs.lib.nixosSystem {
       homeSizeGiB
       swapSizeGiB
       luksEnabled
+      lvmEnabled
       rootFs
       luksPartUuid
       swapUuid

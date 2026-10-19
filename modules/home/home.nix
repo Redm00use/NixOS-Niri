@@ -10,32 +10,13 @@
 }:
 let
   isDesktop = role == "desktop";
-  patchedNoctaliaConfig = pkgs.runCommandLocal "noctalia-shell-config-no-bar-blur" { } ''
-    cp -r ${inputs.noctalia} "$out"
-    chmod -R u+w "$out"
 
-    substituteInPlace "$out/Modules/Panels/Launcher/LauncherCore.qml" \
-      --replace-fail 'color: entry.isSelected ? Color.mOnHover : Color.mOnSurfaceVariant' 'color: Color.mOnSurfaceVariant' \
-      --replace-fail 'color: entry.isSelected ? Color.mOnHover : Color.mOnSurface' 'color: Color.mOnSurface' \
-      --replace-fail 'color: gridEntryContainer.isSelected ? Color.mOnHover : Color.mOnSurface' 'color: Color.mOnSurface' \
-      --replace-fail 'color: (entry.isSelected && !Settings.data.appLauncher.showIconBackground) ? Color.mOnHover : Color.mOnSurface' 'color: Color.mOnSurface' \
-      --replace-fail 'color: (gridEntryContainer.isSelected && !Settings.data.appLauncher.showIconBackground) ? Color.mOnHover : Color.mOnSurface' 'color: Color.mOnSurface'
-
-    cp ${./programs/noctalia/patches/LauncherCore.qml} "$out/Modules/Panels/Launcher/LauncherCore.qml"
-
-    cp ${./programs/noctalia/patches/AllBackgrounds.qml} "$out/Modules/MainScreen/Backgrounds/AllBackgrounds.qml"
-    cp ${./programs/noctalia/patches/MainScreen.qml} "$out/Modules/MainScreen/MainScreen.qml"
-    cp ${./programs/noctalia/patches/BarContentWindow.qml} "$out/Modules/MainScreen/BarContentWindow.qml"
-    cp ${./programs/noctalia/patches/Bar.qml} "$out/Modules/Bar/Bar.qml"
-
-  '';
-
-  noctalia-qs-pkg = inputs.noctalia-qs.packages.${pkgs.stdenv.hostPlatform.system}.default;
 in
 {
   imports = [
     ./programs
   ];
+
 
   home = {
     username = userName;
@@ -57,12 +38,6 @@ in
           runtimeInputs = [ pkgs.freerdp ];
           text = ''
             exec xfreerdp "$@"
-          '';
-        })
-        (writeShellApplication {
-          name = "noctalia-shell-patched";
-          text = ''
-            exec ${noctalia-qs-pkg}/bin/quickshell --path ${patchedNoctaliaConfig} "$@"
           '';
         })
       ]

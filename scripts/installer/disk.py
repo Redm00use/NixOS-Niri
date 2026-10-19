@@ -39,6 +39,9 @@ BASE_REQUIRED_COMMANDS = [
     "swapoff",
 ]
 LIVE_REQUIRED_COMMANDS = ["nixos-generate-config", "nixos-install"]
+LVM_VG_NAME = "nixdots"
+LVM_REQUIRED_COMMANDS = ["pvcreate", "vgcreate", "lvcreate", "vgchange", "vgs"]
+
 FS_REQUIRED_COMMANDS = {
     "btrfs": ["mkfs.btrfs", "btrfs"],
     "ext4": ["mkfs.ext4"],
@@ -50,9 +53,10 @@ class InstallResources:
     root_mounted: bool = False
     swap_device: str | None = None
     crypt_open: bool = False
+    lvm_vg: str | None = None
 
 
-def validate_disk(disk: str, home_size_gib: int, swap_size_gib: int, luks_enabled: bool) -> str:
+def validate_disk(disk: str, home_size_gib: int, swap_size_gib: int, luks_enabled: bool, lvm_enabled: bool = False) -> str:
     if home_size_gib < 0 or swap_size_gib < 0:
         raise ValueError("Размеры разделов не могут быть отрицательными.")
     if not Path("/sys/firmware/efi").is_dir():
@@ -80,7 +84,7 @@ def validate_disk(disk: str, home_size_gib: int, swap_size_gib: int, luks_enable
             check_unused(child)
     check_unused(device)
     # Require 8 GiB for root in addition to EFI, user partitions and GPT margins.
-    required = (513 + (home_size_gib + swap_size_gib + 8) * 1024 + 1) * 1024**2
+    required = (513 + (home_size_gib + swap_size_gib + 8) * 1024 + (32 if lvm_enabled else 1)) * 1024**2
     if int(device["size"]) < required:
         raise ValueError("Недостаточно места: после EFI, swap и /home должно остаться минимум 8 GiB для root.")
     for line in Path("/proc/self/mountinfo").read_text().splitlines():
@@ -89,6 +93,8 @@ def validate_disk(disk: str, home_size_gib: int, swap_size_gib: int, luks_enable
             raise ValueError("/mnt уже используется. Освободи точку установки перед запуском.")
     if Path(f"/dev/mapper/{CRYPT_NAME}").exists():
         raise ValueError(f"Mapper {CRYPT_NAME} уже существует; установщик не будет его перезаписывать.")
+    if lvm_enabled:
+        check_lvm_available()
     return str(path)
 
 
@@ -198,7 +204,7 @@ def confirm_disk_name(disk: str, assume_yes: bool = False) -> None:
         sys.exit(1)
 
 
-def preflight_checks(mode: str, filesystem: str | None = None, luks_enabled: bool = False) -> None:
+def preflight_checks(mode: str, filesystem: str | None = None, luks_enabled: bool = False, lvm_enabled: bool = False) -> None:
     """Проверить только те утилиты, которые реально нужны.
 
     Режим config не требует ни nixos-install, ни parted — раньше генерация конфига
@@ -215,6 +221,9 @@ def preflight_checks(mode: str, filesystem: str | None = None, luks_enabled: boo
         required += FS_REQUIRED_COMMANDS.get(filesystem, [])
     if luks_enabled:
         required.append("cryptsetup")
+
+    if lvm_enabled:
+        required += LVM_REQUIRED_COMMANDS
 
     missing = [command for command in dict.fromkeys(required) if shutil.which(command) is None]
     if missing:
@@ -257,9 +266,16 @@ def format_and_mount(
     luks_passphrase: str | None,
     *,
     resources: InstallResources,
+    lvm_enabled: bool = False,
 ) -> None:
     if filesystem not in FS_REQUIRED_COMMANDS:
         raise ValueError("Неизвестная файловая система.")
+    if home_size_gib < 0 or swap_size_gib < 0 or (separate_home and home_size_gib == 0):
+        raise ValueError("Недопустимый размер swap или /home.")
+    if lvm_enabled:
+        from .lvm import format_lvm_and_mount
+        return format_lvm_and_mount(disk, filesystem, separate_home, home_size_gib,
+                                    swap_size_gib, luks_enabled, luks_passphrase, resources)
     Path("/mnt").mkdir(parents=True, exist_ok=True)
     efi = partition_suffix(disk, 1)
     current_partition = 2
@@ -338,31 +354,38 @@ def format_and_mount(
         root_device = f"/dev/mapper/{CRYPT_NAME}"
         wait_for_device(root_device)
 
+    mount_target_filesystems(filesystem, efi, root_device, home_partition, resources)
+
+
+def mount_target_filesystems(filesystem: str, efi: str, root_device: str,
+                             home_partition: str | None, resources: InstallResources) -> None:
     if filesystem == "btrfs":
         run(["mkfs.btrfs", "-f", root_device])
-        run(["mount", root_device, "/mnt"])
+        # Do not rely on probing a device immediately after mkfs: udev/blkid
+        # may still expose the signature from before formatting.
+        run(["mount", "-t", "btrfs", root_device, "/mnt"])
         resources.root_mounted = True
         run(["btrfs", "subvolume", "create", "/mnt/@"])
         if home_partition is None:
             run(["btrfs", "subvolume", "create", "/mnt/@home"])
         run(["umount", "/mnt"])
         resources.root_mounted = False
-        run(["mount", "-o", "subvol=@", root_device, "/mnt"])
+        run(["mount", "-t", "btrfs", "-o", "subvol=@", root_device, "/mnt"])
         resources.root_mounted = True
     else:
         run(["mkfs.ext4", "-F", root_device])
-        run(["mount", root_device, "/mnt"])
+        run(["mount", "-t", "ext4", root_device, "/mnt"])
         resources.root_mounted = True
 
     run(["mkdir", "-p", "/mnt/boot"])
-    run(["mount", efi, "/mnt/boot"])
+    run(["mount", "-t", "vfat", efi, "/mnt/boot"])
 
     if home_partition is not None:
         run(["mkdir", "-p", "/mnt/home"])
-        run(["mount", home_partition, "/mnt/home"])
+        run(["mount", "-t", filesystem, home_partition, "/mnt/home"])
     elif filesystem == "btrfs":
         run(["mkdir", "-p", "/mnt/home"])
-        run(["mount", "-o", "subvol=@home", root_device, "/mnt/home"])
+        run(["mount", "-t", "btrfs", "-o", "subvol=@home", root_device, "/mnt/home"])
 
 
 def generate_hardware_config() -> None:
@@ -402,7 +425,10 @@ def install_system(host_name: str) -> None:
     print("Вывод nixos-install показывается ниже целиком.")
     # --no-root-passwd: иначе nixos-install в конце ждёт интерактивный ввод пароля root
     # и весь non-interactive режим зависает. Пользователь создаётся конфигом.
-    run(["nixos-install", "--flake", f"path:{target_repo}#{host_name}", "--no-root-passwd"], stream=True)
+    run(["nixos-install", "--flake", f"path:{target_repo}#{host_name}", "--no-root-passwd",
+         "--option", "extra-substituters", "https://noctalia.cachix.org",
+         "--option", "extra-trusted-public-keys",
+         "noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4="], stream=True)
 
 
 def cleanup_mounts(resources: InstallResources) -> None:
@@ -417,7 +443,12 @@ def cleanup_mounts(resources: InstallResources) -> None:
             resources.swap_device = None
         else:
             print("Не удалось отключить swap установки.")
-    if resources.crypt_open and not resources.root_mounted:
+    if resources.lvm_vg and not resources.root_mounted and not resources.swap_device:
+        if run_quiet(["vgchange", "--activate", "n", resources.lvm_vg]):
+            resources.lvm_vg = None
+        else:
+            print("Не удалось деактивировать LVM установки.")
+    if resources.crypt_open and not resources.root_mounted and not resources.lvm_vg:
         if run_quiet(["cryptsetup", "close", CRYPT_NAME]):
             resources.crypt_open = False
         else:
@@ -431,6 +462,7 @@ def describe_plan(
     home_size_gib: int,
     swap_size_gib: int,
     luks_enabled: bool,
+    lvm_enabled: bool = False,
 ) -> list[str]:
     lines = [
         f"Disk: {disk}",
@@ -439,14 +471,19 @@ def describe_plan(
         f"Swap: {swap_size_gib} GiB",
         f"LUKS: {'yes' if luks_enabled else 'no'}",
     ]
+    lines.append(f"LVM: {lvm_enabled}")
+    if lvm_enabled:
+        lines.append("EFI 512 MiB + VG nixdots: root (остаток), swap и /home по выбору")
+        if luks_enabled:
+            lines.append("LUKS шифрует весь LVM: root, swap и отдельный /home")
     if separate_home:
         lines.append(f"Home size: {home_size_gib} GiB")
-    if luks_enabled and swap_size_gib > 0:
+    if luks_enabled and swap_size_gib > 0 and not lvm_enabled:
         lines.append("Внимание: swap-раздел не шифруется, resume будет отключён")
     return lines
 
 
-def capture_layout_ids(disk: str, separate_home: bool, swap_size_gib: int, luks_enabled: bool) -> tuple[str | None, str | None]:
+def capture_layout_ids(disk: str, separate_home: bool, swap_size_gib: int, luks_enabled: bool, lvm_enabled: bool = False) -> tuple[str | None, str | None]:
     current_partition = 2
     swap_partition = partition_suffix(disk, current_partition) if swap_size_gib > 0 else None
     if swap_partition is not None:
@@ -454,6 +491,9 @@ def capture_layout_ids(disk: str, separate_home: bool, swap_size_gib: int, luks_
     if separate_home:
         current_partition += 1
     root_partition = partition_suffix(disk, current_partition)
+    if lvm_enabled:
+        root_partition = partition_suffix(disk, 2)
+        swap_partition = f"/dev/{LVM_VG_NAME}/swap" if swap_size_gib > 0 else None
     luks_part_uuid = blkid_value(root_partition, "PARTUUID") if luks_enabled else None
     swap_uuid = blkid_value(swap_partition, "UUID") if swap_partition is not None else None
     if luks_enabled and not luks_part_uuid:
@@ -461,3 +501,9 @@ def capture_layout_ids(disk: str, separate_home: bool, swap_size_gib: int, luks_
     if swap_partition and not swap_uuid:
         raise RuntimeError("Не удалось прочитать UUID swap-раздела.")
     return luks_part_uuid, swap_uuid
+
+
+def check_lvm_available() -> None:
+    names = subprocess_output(["vgs", "--noheadings", "--options", "vg_name"]).split()
+    if LVM_VG_NAME in names:
+        raise ValueError(f"VG {LVM_VG_NAME} уже существует; установщик не будет её перезаписывать.")

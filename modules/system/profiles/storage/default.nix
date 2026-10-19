@@ -1,11 +1,14 @@
 {
   lib,
   luksEnabled ? false,
+  lvmEnabled ? false,
   luksPartUuid ? null,
   swapUuid ? null,
   ...
 }:
 {
+  boot.initrd.services.lvm.enable = lib.mkIf lvmEnabled true;
+
   boot.initrd.systemd.enable = lib.mkIf luksEnabled true;
 
   boot.initrd.luks.devices = lib.mkIf (luksEnabled && luksPartUuid != null) {
@@ -15,10 +18,9 @@
     };
   };
 
-  # resume включается только без LUKS.
-  # Инсталлер создаёт swap отдельным НЕЗАШИФРОВАННЫМ разделом, а образ гибернации —
-  # это слепок памяти целиком, включая ключи шифрования root.
-  # Включать resume в такой конфигурации — значит сводить шифрование на нет.
+  # Автоматический resume отключён при любом LUKS.
+  # Без LVM swap не шифруется. Для LVM-over-LUKS восстановление
+  # из гибернации с разблокировкой здесь отдельно не настраивается.
   boot.resumeDevice = lib.mkIf (swapUuid != null && !luksEnabled) "/dev/disk/by-uuid/${swapUuid}";
 
   services.fstrim.enable = true;

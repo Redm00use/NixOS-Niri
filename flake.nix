@@ -11,8 +11,6 @@
 
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
-    mynvim.url = "github:viitorags/nvim";
-
     stylix.url = "github:nix-community/stylix";
 
     niri-flake = {
@@ -30,21 +28,8 @@
     # Stable Niri includes upstream blur support since 26.04.
     niri.url = "github:niri-wm/niri/v26.04";
 
-    noctalia = {
-      url = "github:noctalia-dev/noctalia-shell";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
+    noctalia.url = "github:noctalia-dev/noctalia/v5.2.0";
 
-    # Версия закреплена в flake.lock, а не в URL: иначе `nix flake update`
-    # молча не работает и вход вечно висит на старом коммите.
-    noctalia-qs = {
-      url = "github:noctalia-dev/noctalia-qs";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
-    # noctalia / noctalia-qs / dms / quickshell — один QML-стек.
-    # Держим их на одном дереве nixpkgs (unstable), иначе плагины
-    # собираются против разных версий Qt и ломаются в runtime.
     dms = {
       url = "github:AvengeMedia/DankMaterialShell";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
@@ -63,7 +48,6 @@
       nixpkgs,
       home-manager,
       nixpkgs-unstable,
-      mynvim,
       noctalia,
       nur,
       ...
@@ -103,7 +87,7 @@
         import ./dev {
           pkgs = pkgsFor system;
           unstable = unstableFor system;
-          inherit mynvim role;
+          inherit role;
         };
 
       mkHost = import ./lib/mkHost.nix {
@@ -112,7 +96,6 @@
           home-manager
           inputs
           nur
-          mynvim
           noctalia
           theme16
           pkgsFor

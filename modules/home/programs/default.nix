@@ -11,7 +11,6 @@ in
     ./niri
     ./rofi
     ./stylix
-    ./noctalia
     ./wezterm
     ./direnv
     ./yazi

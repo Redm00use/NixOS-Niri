@@ -6,6 +6,12 @@
 python3 ./scripts/install.py
 ```
 
+Для NixOS Live USB без установленного Python:
+
+```bash
+sudo nix-shell -p python3 --run 'python3 ./scripts/install.py'
+```
+
 По умолчанию это встроенный пошаговый TUI без внешних зависимостей.
 
 Структура Python installer:

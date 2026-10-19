@@ -37,6 +37,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--separate-home", action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument("--home-size-gib", type=int)
     parser.add_argument("--swap-size-gib", type=int)
+    parser.add_argument("--lvm", action=argparse.BooleanOptionalAction, default=None, help="Логические тома root/swap/home внутри LVM.")
     parser.add_argument("--luks", action=argparse.BooleanOptionalAction, default=None)
     secret = parser.add_mutually_exclusive_group()
     secret.add_argument("--luks-passphrase", help="Пароль виден в ps; лучше --luks-passphrase-file.")
@@ -60,10 +61,12 @@ def read_passphrase_file(path: str) -> str:
 def collect_answers(args: argparse.Namespace) -> dict:
     data = import_answers(Path(args.import_json)) if args.import_json else {}
     for key in ("mode", "user", "host", "role", "timezone", "locale", "gpu", "fs",
-                "disk", "separate_home", "home_size_gib", "swap_size_gib", "luks"):
+                "disk", "separate_home", "home_size_gib", "swap_size_gib", "luks", "lvm"):
         value = getattr(args, key)
         if value is not None:
             data[key] = value
+    if args.separate_home is False and args.home_size_gib is None:
+        data["home_size_gib"] = 0
     validate_answers(data)
 
     def resolve(key, chooser, default=None):
@@ -88,10 +91,11 @@ def collect_answers(args: argparse.Namespace) -> dict:
     if mode == "live":
         resolve("fs", lambda: "ext4" if preset == "vm" else choose_filesystem(), "ext4" if preset == "vm" else "btrfs")
         resolve("disk", prompt_disk)
-        resolve("separate_home", lambda: False if preset == "vm" else choose_yes_no("Отдельный раздел /home?", False), False)
+        resolve("lvm", lambda: choose_yes_no("Использовать LVM?", False), False)
+        resolve("separate_home", lambda: choose_yes_no("Отдельный том /home?" if data["lvm"] else "Отдельный раздел /home?", False), False)
         resolve("home_size_gib", lambda: prompt_int("Размер /home в GiB", 200) if data["separate_home"] else 0, 200 if data["separate_home"] else 0)
-        resolve("swap_size_gib", lambda: 4 if preset == "vm" else prompt_int("Размер swap в GiB (0 = без swap)", 8), 4 if preset == "vm" else 8)
-        resolve("luks", lambda: False if preset == "vm" else choose_yes_no("Включить LUKS для root?", False), False)
+        resolve("swap_size_gib", lambda: prompt_int("Размер swap в GiB (любое целое, 0 = без swap)", 4 if preset == "vm" else 8), 4 if preset == "vm" else 8)
+        resolve("luks", lambda: False if preset == "vm" else choose_yes_no("Шифровать LVM целиком?" if data["lvm"] else "Включить LUKS для root?", False), False)
         if data["separate_home"] and data["home_size_gib"] <= 0:
             raise ValueError("Для отдельного /home требуется размер больше 0 GiB.")
         if not data["separate_home"] and data["home_size_gib"] != 0:
@@ -110,7 +114,7 @@ def execute() -> int:
     show_summary("Конфигурация", [(key, str(value)) for key, value in data.items()])
     if mode == "live":
         for line in describe_plan(data["disk"], data["fs"], data["separate_home"],
-                                  data["home_size_gib"], data["swap_size_gib"], data["luks"]):
+                                  data["home_size_gib"], data["swap_size_gib"], data["luks"], data["lvm"]):
             print(f"- {line}")
     if args.dry_run:
         print("\nDry-run завершён: файлы и диски не изменены; доступность диска и сборка не проверялись.")
@@ -119,8 +123,8 @@ def execute() -> int:
     passphrase = None
     if mode == "live":
         require_root()
-        preflight_checks(mode, data["fs"], data["luks"])
-        data["disk"] = validate_disk(data["disk"], data["home_size_gib"], data["swap_size_gib"], data["luks"])
+        preflight_checks(mode, data["fs"], data["luks"], data["lvm"])
+        data["disk"] = validate_disk(data["disk"], data["home_size_gib"], data["swap_size_gib"], data["luks"], data["lvm"])
         if data["luks"]:
             if args.luks_passphrase_file:
                 passphrase = read_passphrase_file(args.luks_passphrase_file)
@@ -155,13 +159,13 @@ def execute() -> int:
         resources = InstallResources()
         try:
             # Recheck immediately before the first destructive command.
-            validate_disk(data["disk"], data["home_size_gib"], data["swap_size_gib"], data["luks"])
+            validate_disk(data["disk"], data["home_size_gib"], data["swap_size_gib"], data["luks"], data["lvm"])
             print_progress(1, 3, "Разметка и монтирование")
             format_and_mount(data["disk"], data["fs"], data["separate_home"], data["home_size_gib"],
-                             data["swap_size_gib"], data["luks"], passphrase, resources=resources)
-            luks_id, swap_id = capture_layout_ids(data["disk"], data["separate_home"], data["swap_size_gib"], data["luks"])
+                             data["swap_size_gib"], data["luks"], passphrase, resources=resources, lvm_enabled=data["lvm"])
+            luks_id, swap_id = capture_layout_ids(data["disk"], data["separate_home"], data["swap_size_gib"], data["luks"], data["lvm"])
             write_meta(*basic, data["separate_home"], data["home_size_gib"], data["swap_size_gib"],
-                       data["luks"], data["fs"], luks_id, swap_id, host_dir)
+                       data["luks"], data["fs"], luks_id, swap_id, host_dir, lvm_enabled=data["lvm"])
             print_progress(2, 3, "Hardware-конфигурация")
             generate_hardware_config()
             copy_hardware_config(hardware, swap_id)

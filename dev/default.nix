@@ -1,7 +1,6 @@
 {
   pkgs,
   unstable,
-  mynvim,
   role ? "desktop",
   ...
 }:
@@ -12,7 +11,7 @@ in
   extraPackages =
     with pkgs;
     [
-      mynvim.packages.${stdenv.hostPlatform.system}.nvim
+      neovim
       gh
       fd
       jq
