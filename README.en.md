@@ -95,94 +95,91 @@
 
 ## 📦 Installation
 
-> [!IMPORTANT]
-> Before running the installer, make sure `python3` is installed on the system.
->
-> On a NixOS live environment, you can quickly get it with:
-> ```bash
-> nix-shell -p python3
-> ```
+The installer runs from a NixOS Live USB and installs NixOS together with this
+configuration. You do not need an existing NixOS installation. Boot the Live ISO
+in UEFI mode on x86_64 and connect to the internet to fetch the flake and packages.
 
-### Interactive mode
+> [!CAUTION]
+> A live install erases the selected disk completely. Verify the disk name and
+> partition plan before confirming. On a different computer, the installer
+> generates a hardware configuration for that machine.
 
-```bash
-python3 ./scripts/install.py
-```
-
-Installer now supports presets:
-
-- `desktop-amd`
-- `desktop-nvidia`
-- `desktop-intel`
-- `vm`
-- `server`
-- `custom`
-
-### Full live installation
+Run this in the NixOS Live environment (Python and LVM are provided temporarily):
 
 ```bash
-sudo python3 ./scripts/install.py
+sudo nix-shell -p python3 lvm2 --run 'python3 scripts/install.py'
 ```
 
-> [!NOTE]
-> The final `nixos-install` stage can take anywhere from `20` to `40` minutes, especially on the first run, inside a virtual machine, or with a slow internet connection.
+Choose `live`, then select the username, host, GPU, filesystem, and disk. The
+installer asks whether to use LVM and LUKS, how much swap to allocate, and whether
+to create a separate `/home`. Review the plan and type `ERASE` to confirm. Building
+and installing can take 20–40 minutes.
 
-### Example non-interactive install
+### Disk layout
+
+Choose ext4 or btrfs. Without LVM, the installer creates EFI and root partitions,
+plus optional swap and `/home` partitions. With btrfs, root and home data use the
+`@` and `@home` subvolumes.
+
+With LVM, the installer creates an EFI partition and a PV with the `nixdots` VG.
+Root takes the remaining space; swap and a separate `/home` are logical volumes
+with the sizes you choose. Any swap size in GiB that fits on the disk is allowed;
+`0` disables disk swap. Configured zram remains enabled independently.
+
+LUKS without LVM encrypts root. LVM with LUKS encrypts the whole PV, including
+root, swap, and separate home. Automatic hibernation resume is disabled with LUKS.
+For automated installs, pass the LUKS password with `--luks-passphrase-file`.
+
+### Install with options
+
+Example: LVM, 32 GiB swap, and no separate home:
 
 ```bash
-sudo python3 ./scripts/install.py \
-  --mode live \
-  --host mypc \
-  --user me \
-  --role desktop \
-  --timezone Europe/Kyiv \
-  --locale ru_RU.UTF-8 \
-  --gpu amd \
-  --fs btrfs \
-  --disk /dev/nvme0n1 \
-  --swap-size-gib 8 \
-  --yes
+sudo nix-shell -p python3 lvm2 --run 'python3 scripts/install.py --mode live --host mypc --user me --gpu amd --disk /dev/nvme0n1 --lvm --swap-size-gib 32 --no-separate-home --yes'
 ```
 
-### Dry-run
+Add `--separate-home --home-size-gib 200` to create a separate home volume. Use
+`--no-lvm` for a standard partition layout; `--swap-size-gib 0` disables disk
+swap. Since `--yes` skips the disk erasure confirmation, review the plan first
+with `--dry-run`:
 
 ```bash
-sudo python3 ./scripts/install.py --mode live --host test --user me --gpu amd --fs btrfs --disk /dev/nvme0n1 --dry-run
+sudo nix-shell -p python3 lvm2 --run 'python3 scripts/install.py --mode live --host test --user me --gpu amd --disk /dev/nvme0n1 --lvm --swap-size-gib 32 --yes --dry-run'
 ```
 
-### Export / import installer answers
+For LUKS in automated mode, add `--luks --luks-passphrase-file /path/to/file`.
+Avoid passing the password with `--luks-passphrase`; it may appear in process
+lists and shell history.
+
+### Generate a host config only
+
+If NixOS is already installed, create a host without partitioning a disk:
 
 ```bash
-python3 ./scripts/install.py --export-json install-profile.json
-python3 ./scripts/install.py --import-json install-profile.json
+python3 scripts/install.py --mode config --host mypc --user me --role desktop --timezone Europe/Kyiv --locale ru_RU.UTF-8 --gpu amd --yes
 ```
 
-### What the installer can do
-
-1. Create a new host under `hosts/<hostName>`
-2. Generate `meta.nix`
-3. Partition and format a disk in live mode
-4. Configure `EFI + root`
-5. Optionally create `swap`
-6. Optionally create a separate `/home`
-7. Optionally enable `LUKS`
-8. Create `btrfs` subvolumes
-9. Save `PARTUUID` / `UUID` for runtime storage config
-10. Create a backup of an existing `hosts/<hostName>` before overwrite
-11. Show an install plan and check required tools before starting
-12. Support presets and quick timezone / locale selection through menus
-13. Write install logs to `.installer-logs/`
-14. Export / import answers to `json`
-15. Clean up mounts / swap on install failure
-16. Show disks as a selectable list instead of requiring manual typing
-17. Supports arrow-key disk selection with Enter, with a fallback to the plain list mode
-18. Shows step-based progress and a spinner for long-running operations
-
-### Apply an existing host config
+Replace `hosts/mypc/hardware-configuration.nix` with the hardware configuration
+for this computer, then apply the system:
 
 ```bash
-sudo nixos-rebuild switch --flake .#<hostName>
+sudo nixos-rebuild switch --flake 'path:.#mypc'
 ```
+
+Presets include `desktop-amd`, `desktop-nvidia`, `desktop-intel`, `vm`, `server`,
+and `custom`. Use `--export-json` and `--import-json` to save and reuse answers.
+Before an existing host is changed, a backup is created under
+`.installer-backups/`; install logs are stored in `.installer-logs/`.
+
+After installation, sign in as the created user and change the initial password
+with `passwd`.
+
+### Noctalia v5
+
+The desktop profile installs Noctalia v5.2.0 with an app grid launcher. The panel
+shows workspaces on the left, the active app in the center, and notifications,
+volume, Bluetooth, keyboard layout, and clock on the right. It keeps the Original
+palette; the old Noctalia v4 QML patches and noctalia-qs have been removed.
 
 ## ⌨️ Real Keybinds
 

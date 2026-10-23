@@ -8,9 +8,6 @@
 	<a href="./README.en.md">
 		<img src="https://img.shields.io/badge/README-ENG-89b4fa?style=for-the-badge&labelColor=1C2325">
 	</a>
-	<a href="./.github/workflows/ci.yml">
-		<img src="https://img.shields.io/github/actions/workflow/status/Redm00se/NixOS-Niri/ci.yml?branch=main&label=CI&style=for-the-badge&color=a6e3a1&labelColor=1C2325">
-	</a>
 </div>
 
 ***
@@ -98,94 +95,92 @@
 
 ## 📦 Установка
 
-> [!IMPORTANT]
-> Перед запуском installer убедись, что в системе установлен `python3`.
->
-> В live-режиме NixOS можно быстро запустить его так:
-> ```bash
-> nix-shell -p python3
-> ```
+Установщик запускается из Live USB и за один проход устанавливает NixOS вместе
+с этим конфигом. Предварительно установленная NixOS не нужна. Используй Live ISO
+в режиме UEFI на x86_64 и подключи интернет для загрузки flake и пакетов.
 
-### Интерактивный режим
+> [!CAUTION]
+> Live-установка полностью стирает выбранный диск. Перед подтверждением проверь
+> имя диска и план разметки. На другом компьютере создаётся новый
+> `hardware-configuration.nix` под его оборудование.
 
-```bash
-python3 ./scripts/install.py
-```
-
-Installer теперь умеет presets:
-
-- `desktop-amd`
-- `desktop-nvidia`
-- `desktop-intel`
-- `vm`
-- `server`
-- `custom`
-
-### Полная live-установка
+В NixOS Live запусти установщик так (команда временно добавит Python и LVM):
 
 ```bash
-sudo python3 ./scripts/install.py
+sudo nix-shell -p python3 lvm2 --run 'python3 scripts/install.py'
 ```
 
-> [!NOTE]
-> Финальный этап `nixos-install` может занимать от `20` до `40` минут, особенно на первом запуске, в виртуальной машине или при медленном интернете.
+Выбери режим `live`, имя пользователя и хоста, видеокарту, файловую систему и
+диск. Затем установщик спросит, включать ли LVM и LUKS, сколько выделить swap и
+создавать ли отдельный `/home`. После проверки плана нужно подтвердить стирание
+диска словом `ERASE`. Сборка и установка могут занять 20–40 минут.
 
-### Пример non-interactive установки
+### Разметка диска
+
+Можно выбрать ext4 или btrfs. Без LVM установщик создаёт EFI, root и опциональные
+разделы swap и `/home`. В btrfs root и домашние данные используют подтома `@` и
+`@home`.
+
+С LVM создаются EFI-раздел и PV с VG `nixdots`. Root занимает оставшееся место;
+swap и отдельный `/home` создаются как логические тома по выбранным размерам.
+Укажи любой размер swap в GiB, который помещается на диске; `0` отключает
+дисковый swap. Настроенный отдельно zram при этом продолжает работать.
+
+LUKS без LVM шифрует root. При сочетании LVM и LUKS шифруется весь PV, включая
+root, swap и отдельный `/home`. Автоматический resume из гибернации с LUKS не
+включается. Если включён LUKS, установщик запросит пароль; для автоматизации его
+можно передать файлом через `--luks-passphrase-file`.
+
+### Установка с параметрами
+
+Пример для LVM, swap 32 GiB и общего root/home:
 
 ```bash
-sudo python3 ./scripts/install.py \
-  --mode live \
-  --host mypc \
-  --user me \
-  --role desktop \
-  --timezone Europe/Kyiv \
-  --locale ru_RU.UTF-8 \
-  --gpu amd \
-  --fs btrfs \
-  --disk /dev/nvme0n1 \
-  --swap-size-gib 8 \
-  --yes
+sudo nix-shell -p python3 lvm2 --run 'python3 scripts/install.py --mode live --host mypc --user me --gpu amd --disk /dev/nvme0n1 --lvm --swap-size-gib 32 --no-separate-home --yes'
 ```
 
-### Dry-run
+Добавь `--separate-home --home-size-gib 200`, чтобы создать отдельный `/home`.
+Для установки без LVM используй `--no-lvm`; `--swap-size-gib 0` отключает
+дисковый swap. С `--yes` установщик не спрашивает подтверждение стирания диска,
+поэтому сначала просмотри план через `--dry-run`:
 
 ```bash
-sudo python3 ./scripts/install.py --mode live --host test --user me --gpu amd --fs btrfs --disk /dev/nvme0n1 --dry-run
+sudo nix-shell -p python3 lvm2 --run 'python3 scripts/install.py --mode live --host test --user me --gpu amd --disk /dev/nvme0n1 --lvm --swap-size-gib 32 --yes --dry-run'
 ```
 
-### Export / import installer answers
+Для LUKS в автоматическом режиме добавь `--luks --luks-passphrase-file /путь/к/файлу`.
+Не передавай пароль непосредственно через `--luks-passphrase`: он может быть
+виден в списке процессов и истории оболочки.
+
+### Только генерация host-конфига
+
+Если NixOS уже установлена, создай host без разметки диска:
 
 ```bash
-python3 ./scripts/install.py --export-json install-profile.json
-python3 ./scripts/install.py --import-json install-profile.json
+python3 scripts/install.py --mode config --host mypc --user me --role desktop --timezone Europe/Kyiv --locale ru_RU.UTF-8 --gpu amd --yes
 ```
 
-### Что умеет installer
-
-1. Создаёт новый host в `hosts/<hostName>`
-2. Генерирует `meta.nix`
-3. Размечает и форматирует диск в live-режиме
-4. Настраивает `EFI + root`
-5. Опционально создаёт `swap`
-6. Опционально создаёт отдельный `/home`
-7. Опционально включает `LUKS`
-8. Создаёт `btrfs` subvolumes
-9. Сохраняет `PARTUUID` / `UUID` для runtime storage-конфига
-10. Делает backup существующего `hosts/<hostName>` перед перезаписью
-11. Показывает план установки и проверяет необходимые утилиты до старта
-12. Поддерживает presets и быстрый выбор timezone / locale через меню
-13. Пишет лог установки в `.installer-logs/`
-14. Умеет экспорт / импорт ответов в `json`
-15. Делает cleanup mount / swap при ошибке установки
-16. Показывает диски списком, чтобы можно было выбрать номером
-17. Поддерживает TUI-выбор диска стрелками и Enter, с fallback на обычный список
-18. Показывает прогресс по шагам и spinner на долгих операциях
-
-### Применение существующего host-конфига
+Проверь и замени `hosts/mypc/hardware-configuration.nix` конфигурацией текущего
+компьютера, затем собери систему:
 
 ```bash
-sudo nixos-rebuild switch --flake .#<hostName>
+sudo nixos-rebuild switch --flake 'path:.#mypc'
 ```
+
+Установщик поддерживает пресеты `desktop-amd`, `desktop-nvidia`, `desktop-intel`,
+`vm`, `server` и `custom`. Ответы можно переносить через `--export-json` и
+`--import-json`. Перед изменением существующего host создаётся резервная копия в
+`.installer-backups/`; журнал установки находится в `.installer-logs/`.
+
+После установки войди под созданным пользователем и смени начальный пароль
+командой `passwd`.
+
+### Noctalia v5
+
+Desktop-профиль устанавливает Noctalia v5.2.0 с меню приложений в виде сетки.
+Панель показывает рабочие столы слева, активное приложение по центру и
+уведомления, громкость, Bluetooth, раскладку и часы справа. Конфигурация сохраняет
+палитру Original; старые Noctalia v4 QML-патчи и noctalia-qs удалены.
 
 ## ⌨️ Реальные хоткеи
 
