@@ -104,13 +104,14 @@
 > имя диска и план разметки. На другом компьютере создаётся новый
 > `hardware-configuration.nix` под его оборудование.
 
-В NixOS Live запусти установщик так (команда временно добавит Python и LVM):
+В NixOS Live выполни одну команду. Bash-скрипт сам скачает проект, временно
+подключит Git, Python и LVM и запустит Live-установщик:
 
 ```bash
-sudo nix-shell -p python3 lvm2 --run 'python3 scripts/install.py'
+curl -fsSL https://raw.githubusercontent.com/Redm00use/NixOS-Niri/main/scripts/install-live.sh -o /tmp/nixos-niri-install.sh && bash /tmp/nixos-niri-install.sh
 ```
 
-Выбери режим `live`, имя пользователя и хоста, видеокарту, файловую систему и
+Режим `live` уже выбран. Укажи имя пользователя и хоста, видеокарту, файловую систему и
 диск. Затем установщик спросит, включать ли LVM и LUKS, сколько выделить swap и
 создавать ли отдельный `/home`. После проверки плана нужно подтвердить стирание
 диска словом `ERASE`. Сборка и установка могут занять 20–40 минут.

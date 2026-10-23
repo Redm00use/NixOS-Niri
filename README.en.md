@@ -104,13 +104,14 @@ in UEFI mode on x86_64 and connect to the internet to fetch the flake and packag
 > partition plan before confirming. On a different computer, the installer
 > generates a hardware configuration for that machine.
 
-Run this in the NixOS Live environment (Python and LVM are provided temporarily):
+Run this single command in NixOS Live. The Bash script downloads the project,
+provides Git, Python, and LVM temporarily, and starts the Live installer:
 
 ```bash
-sudo nix-shell -p python3 lvm2 --run 'python3 scripts/install.py'
+curl -fsSL https://raw.githubusercontent.com/Redm00use/NixOS-Niri/main/scripts/install-live.sh -o /tmp/nixos-niri-install.sh && bash /tmp/nixos-niri-install.sh
 ```
 
-Choose `live`, then select the username, host, GPU, filesystem, and disk. The
+The `live` mode is selected automatically. Select the username, host, GPU, filesystem, and disk. The
 installer asks whether to use LVM and LUKS, how much swap to allocate, and whether
 to create a separate `/home`. Review the plan and type `ERASE` to confirm. Building
 and installing can take 20–40 minutes.

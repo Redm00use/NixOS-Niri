@@ -1,24 +1,18 @@
-# NixOS Installer
+# Запуск из NixOS Live ISO
 
-Основная точка входа:
-
-```bash
-python3 ./scripts/install.py
-```
-
-Для NixOS Live USB без установленного Python:
+Одна команда скачивает Bash-скрипт, который загружает проект, временно подключает
+Git, Python и LVM через Nix и запускает установщик в режиме `live`:
 
 ```bash
-sudo nix-shell -p python3 --run 'python3 ./scripts/install.py'
+curl -fsSL https://raw.githubusercontent.com/Redm00use/NixOS-Niri/main/scripts/install-live.sh -o /tmp/nixos-niri-install.sh && bash /tmp/nixos-niri-install.sh
 ```
 
-По умолчанию это встроенный пошаговый TUI без внешних зависимостей.
+Из уже скачанного проекта:
 
-Структура Python installer:
-- `scripts/installer/cli.py` — основной сценарий
-- `scripts/installer/prompts.py` — интерактивные вопросы и валидация
-- `scripts/installer/disk.py` — разметка, форматирование, mount, install
-- `scripts/installer/meta.py` — генерация `hosts/<host>/meta.nix`
-- `scripts/installer/common.py` — общие пути и shell helpers
+```bash
+bash scripts/install-live.sh
+```
 
-Это сделано, чтобы installer было проще поддерживать и расширять.
+Выбор диска, LVM, swap, отдельного `/home` и шифрования выполняется в меню.
+Live-установка полностью стирает выбранный диск после подтверждения.
+Нужны NixOS Live ISO, UEFI, x86_64 и интернет. Подробности: [INSTALL.md](INSTALL.md).
