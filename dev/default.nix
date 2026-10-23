@@ -11,7 +11,7 @@ in
   extraPackages =
     with pkgs;
     [
-      neovim
+      nano
       gh
       fd
       jq

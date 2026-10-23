@@ -85,7 +85,7 @@ in
 
     sessionVariables = {
       TERMINAL = "wezterm";
-      EDITOR = "nvim";
+      EDITOR = if isDesktop then "zeditor --wait" else "nano";
       QT_QPA_PLATFORM = "wayland;xcb";
       NIXOS_OZONE_WL = "1";
       XKB_DEFAULT_OPTIONS = "led:scroll";

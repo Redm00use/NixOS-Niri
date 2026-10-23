@@ -99,7 +99,7 @@
         ];
         edit = [
           {
-            run = ''nvim "$@" '';
+            run = ''$EDITOR "$@" '';
             block = true;
             for = "unix";
           }
@@ -128,8 +128,9 @@
 
         EDITOR = [
           {
-            run = ''nvim "$@"'';
+            run = ''$EDITOR "$@"'';
             desc = "Run EDITOR";
+            block = true;
           }
         ];
       };

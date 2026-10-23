@@ -50,7 +50,7 @@
 	</tr>
 	<tr>
 		<td>Editor</td>
-		<td>Zed / Neovim</td>
+		<td>Zed</td>
 	</tr>
 	<tr>
 		<td>Audio</td>

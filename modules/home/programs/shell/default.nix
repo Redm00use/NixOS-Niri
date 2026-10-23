@@ -14,6 +14,7 @@
     shellAliases =
       let
         flakeDir = "~/nixos-config";
+        editor = if role == "desktop" then "zeditor --wait" else "nano";
         host =
           if hostName != null && hostName != "" then
             hostName
@@ -27,8 +28,8 @@
         upd = "nix flake update ${flakeDir}";
         upg = "sudo nixos-rebuild switch --upgrade --flake ${flakeDir}#${host}";
         # hms = "home-manager switch --flake ${flakeDir}";
-        conf = "nvim ${flakeDir}/modules/system/configuration.nix";
-        pkgs = "nvim ${flakeDir}/modules/system/packages.nix";
+        conf = "${editor} ${flakeDir}/modules/system/configuration.nix";
+        pkgs = "${editor} ${flakeDir}/modules/system/packages.nix";
         ls = "eza -ha --icons=auto --sort=name --group-directories-first";
         ll = "eza -lh --icons=auto";
         ff = "fastfetch";
